@@ -6,8 +6,8 @@ name: omazzite
 description: This is my personal OS image.
 
 # the base image to build on top of (FROM) and the version tag to use
-base-image: ghcr.io/ublue-os/silverblue-main
-image-version: 42 # latest is also supported if you want new updates ASAP
+base-image: ghcr.io/ublue-os/bazzite-dx-nvidia
+image-version: latest # latest is also supported if you want new updates ASAP
 
 # module configuration, executed in order
 # you can include multiple instances of the same module
@@ -17,29 +17,344 @@ modules:
       - source: system
         destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
 
+  - type: script
+    snippets:
+      - |
+        # Remove KDE desktop packages to reduce image size
+        # Use a simpler approach that doesn't rely on complex sed patterns
+        dnf5 remove -y kde-settings kde-settings-pulseaudio kde-settings-minimal || true
+        dnf5 remove -y plasma-workspace plasma-desktop plasma-systemsettings || true
+        dnf5 remove -y kwin kwin-wayland kwin-x11 || true
+        dnf5 remove -y kde-cli-tools kde-gtk-config || true
+        # Remove any remaining KDE packages with wildcard
+        dnf5 remove -y kde-settings* plasma* kwin* kde-cli* kde-gtk* || true
+        # Clean DNF cache to reduce image size
+        dnf5 clean all
+        rm -rf /var/cache/dnf/*
+
   - type: dnf
     repos:
       copr:
+        - solopasha/hyprland
+        - jdxcode/mise
         - atim/starship
     install:
+      # Disable weak dependencies to reduce image size and build time
+      install-weak-deps: false
       packages:
-        - micro
+        # Terminal and shell utilities
         - starship
+        - alacritty
+        - kitty
+        - zoxide
+
+        # File managers and utilities
+        - bat
+        - du-dust
+        - fd-find
+        - fzf
+        - ripgrep
+        - tar
+        - unzip
+        - wget
+
+        # Development tools
+        - cargo
+        - clang
+        - dbus-devel
+        - pkgconf-pkg-config
+        - openssl-devel
+        - libxcb-devel
+
+        # Text editors and IDEs
+        - neovim
+
+        # System utilities
+        - bind-utils
+        - brightnessctl
+        - btop
+        - fastfetch
+        - iputils
+        - pciutils
+        - plocate
+        - power-profiles-daemon
+        - tldr
+        - usbutils
+        - whois
+
+        # Fonts
+        - cascadia-code-nf-fonts
+        - cascadia-mono-nf-fonts
+        - fontawesome-fonts-all
+        - google-noto-fonts-common
+
+        # Applications
+        - chromium
+        - evince
+        - gnome-calculator
+        - gum
+        - imv
+        - mpv
+        - nautilus
+
+        # Input methods
+        - fcitx5
+        - fcitx5-configtool
+        - fcitx5-gtk
+        - fcitx5-qt
+
+        # File system and networking
+        - gvfs-mtp
+        - gvfs-smb
+        - iwd
+        - pipx
+        - playerctl
+
+        # Hyprland ecosystem
+        - hyprcursor
+        - hypridle
+        - hyprland
+        - hyprland-qt-support
+        - hyprland-qtutils
+        - hyprlock
+        - hyprpaper
+        - hyprpicker
+        - hyprpolkitagent
+        - hyprshot
+        - hyprsunset
+        - hyprsysteminfo
+        - hyprutils
+        - hyprwayland-scanner
+
+        # Desktop components
+        - kvantum-qt5
+        - mako
+        - swaybg
+        - uwsm
+        - waybar
+        - wf-recorder
+        - wl-clipboard
+        - wofi
+        - xdg-desktop-portal-gtk
+        - xdg-desktop-portal-hyprland
+        - xdg-user-dirs
+
+        # Theming and icons
+        - gnome-themes-extra
+        - xmlstarlet
+        - yaru-icon-theme
+
+        # Additional tools
+        - mise
+        - satty
+        - slurp
+        - sushi
+        - curl
+        - rsync
+        - tmux
+        - npm
+        - meson
+        - scdoc
+        - pyprland
+        - python3-pillow
+        - python3-psutil
+        - foot
+        - jetbrains-mono-fonts
+        - qt5ct
+        - qt6ct
+        - nwg-look
+        - blueman
+        - wdisplays
+        - cliphist
+        - gammastep
+        - grimblast
+        - pamixer
+        - pavucontrol
+        - swappy
+        - swww
+        - upower
+        - yad
+        - sddm
+
+        # Boot and system
+        - plymouth
+        - plymouth-core-libs
+        - plymouth-scripts
+        - plymouth-system-theme
+        - gnome-calculator
     remove:
       packages:
-        # example: removing firefox (in favor of the flatpak)
-        # "firefox" is the main package, "firefox-langpacks" is a dependency
         - firefox
-        - firefox-langpacks # also remove firefox dependency (not required for all packages, this is a special case)
+        - firefox-langpacks
+        - kitty
+        - NetworkManager*
+        - nwg-panel
+        - tuned-ppd
 
+  # Move omadora setup earlier to fail fast if there are issues
+  - type: script
+    snippets:
+      - git clone https://github.com/elpritchos/omadora.git /tmp/omadora
+
+  - type: script
+    snippets:
+      - mkdir -p /etc/skel/.config && cp -r /tmp/omadora/config/* /etc/skel/.config/
+      - mkdir -p /etc/fontconfig/conf.d && cp /tmp/omadora/config/fontconfig/fonts.conf /etc/fontconfig/conf.d/99-omadora-fonts.conf
+      - mkdir -p /etc/environment.d && cp /tmp/omadora/config/environment.d/fcitx.conf /etc/environment.d/99-omadora-fcitx.conf
+      - mkdir -p /usr/lib/systemd/user && cp -r /tmp/omadora/config/systemd/user/* /usr/lib/systemd/user/
+      - cp -r /tmp/omadora/default/hypr/* /etc/skel/.config/hypr/
+      - cp /tmp/omadora/default/bashrc /etc/skel/.bashrc
+      - cp /tmp/omadora/default/xcompose /etc/skel/.XCompose
+      - cp -r /tmp/omadora/themes/* /usr/share/themes
+      - mkdir -p /usr/share/icons/omadora && cp -r /tmp/omadora/applications/icons/* /usr/share/icons/omadora/
+      - mkdir -p /etc/skel/.local/share/omadora/default && cp -r /tmp/omadora/default/* /etc/skel/.local/share/omadora/default/
+      - mkdir -p /etc/skel/.local/share/omadora/bin && cp -r /tmp/omadora/bin/* /etc/skel/.local/share/omadora/bin/
+      - mkdir -p /usr/share/plymouth/themes/sliced && cp -r /tmp/omadora/default/plymouth/* /usr/share/plymouth/themes/sliced
+
+  - type: script
+    snippets:
+      - |
+        # Create user-specific omadora setup (replicates omadora's user setup)
+        mkdir -p /etc/skel/.config/omadora/themes
+        mkdir -p /etc/skel/.config/omadora/current
+        mkdir -p /etc/skel/.config/omadora/branding
+        mkdir -p /etc/skel/.config/btop/themes
+        mkdir -p /etc/skel/.config/mako
+        mkdir -p /etc/skel/.config/nvim/lua/plugins
+
+        # Copy branding files
+        cp /tmp/omadora/icon.txt /etc/skel/.config/omadora/branding/about.txt
+        cp /tmp/omadora/logo.txt /etc/skel/.config/omadora/branding/screensaver.txt
+
+  - type: script
+    snippets:
+      - for theme in /usr/share/themes/*; do if [ -d "$theme" ]; then ln -nfs "$theme" /etc/skel/.config/omadora/themes/; fi; done
+
+  - type: script
+    snippets:
+      - ln -snf /etc/skel/.config/omadora/themes/rose-pine-darker /etc/skel/.config/omadora/current/theme
+      - ln -snf /etc/skel/.config/omadora/current/theme/backgrounds/01_background.png /etc/skel/.config/omadora/current/background
+
+  - type: script
+    snippets:
+      - ln -snf /etc/skel/.config/omadora/current/theme/neovim.lua /etc/skel/.config/nvim/lua/plugins/theme.lua
+      - ln -snf /etc/skel/.config/omadora/current/theme/btop.theme /etc/skel/.config/btop/themes/current.theme
+      - ln -snf /etc/skel/.config/omadora/current/theme/mako.ini /etc/skel/.config/mako/config
+
+  # Move flatpak setup earlier to catch issues sooner
   - type: default-flatpaks
     configurations:
-      - notify: true # Send notification after install/uninstall is finished (true/false)
+      - notify: true
         scope: system
-        # If no repo information is specified, Flathub will be used by default
-        install: # system flatpaks we want all users to have and not remove
+        install:
           - org.mozilla.firefox
           - org.gnome.Loupe
-      - scope: user # Also add Flathub user repo, but no user packages
+      - scope: user
+
+  # Move xdg setup earlier - it's lightweight and has no dependencies
+  - type: script
+    snippets:
+      - xdg-user-dirs-update
+
+  # Move mimetypes setup earlier - lightweight configuration
+  - type: script
+    snippets:
+      - |
+        # Set default applications (mimetypes) - replicates omadora's mimetypes.sh
+        xdg-mime default imv.desktop image/png image/jpeg image/gif image/webp image/bmp image/tiff
+        xdg-mime default org.gnome.Evince.desktop application/pdf
+        xdg-settings set default-web-browser chromium-browser.desktop
+        xdg-mime default chromium-browser.desktop x-scheme-handler/http x-scheme-handler/https
+        xdg-mime default mpv.desktop video/mp4 video/x-msvideo video/x-matroska video/x-flv video/x-ms-wmv video/mpeg video/ogg video/webm video/quicktime video/3gpp video/3gpp2 video/x-ms-asf video/x-ogm+ogg video/x-theora+ogg application/ogg
+
+
+  - type: script
+    snippets:
+      - dnf remove -y "@gnome-desktop" || true
+      - dnf remove -y "@gnome-apps" || true
+      - dnf remove -y "@kde-desktop" || true
+      - dnf remove -y "@kde-plasma" || true
+      - dnf install -y "@development-tools" || true
+      - dnf install -y "@development-libs" || true
+      - dnf install -y "@fonts" || true
+      - dnf install -y "@hardware-support" || true
+      - dnf install -y "@multimedia" || true
+      - dnf group remove -y networkmanager-submodules || true
+
+
+  - type: script
+    snippets:
+      - gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark"
+      - gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+      - gsettings set org.gnome.desktop.interface icon-theme "Yaru-blue"
+      - ln -snf /usr/share/icons/Adwaita/symbolic/actions/go-previous-symbolic.svg /usr/share/icons/Yaru/scalable/actions/go-previous-symbolic.svg
+      - ln -snf /usr/share/icons/Adwaita/symbolic/actions/go-next-symbolic.svg /usr/share/icons/Yaru/scalable/actions/go-next-symbolic.svg
+      - gtk-update-icon-cache /usr/share/icons/Yaru
+      - pipx install terminaltexteffects
+
+  # Cargo tools are compiled after omadora setup
+
+  - type: script
+    snippets:
+      - cargo install --root /etc/skel/.local/share/omadora bluetui cargo-update eza impala
+      - fc-cache -f -v
+      - |
+        # Initialize plocate database if it doesn't exist
+        mkdir -p /var/lib/plocate && updatedb
+      - |
+        # Remove NetworkManager configuration (from post-install/clean-up.sh)
+        rm -rf /etc/NetworkManager
+
+  - type: script
+    snippets:
+      - systemctl set-default graphical.target
+
+  #- type: script
+  #  snippets:
+  #    - plymouth-set-default-theme -R sliced
+
+  - type: script
+    snippets:
+      - rm -rf /etc/NetworkManager
+
+  # Updatedb is optional and may fail if plocate database isn't initialized yet
+
+
+  - type: script
+    snippets:
+      - |
+        # Set up GPG configuration (replicates omadora's gpg.sh)
+        mkdir -p /etc/gnupg
+        cp /tmp/omadora/default/gpg/dirmngr.conf /etc/gnupg/
+        chmod 644 /etc/gnupg/dirmngr.conf
+
+
+      - |
+        # Fix DHCP DNS to allow VPN DNS override (from migration 1757481073.sh)
+        if [ -f /etc/systemd/resolved.conf ]; then if grep -q "^DNS=$" /etc/systemd/resolved.conf && grep -q "^FallbackDNS=$" /etc/systemd/resolved.conf; then sed -i '/^DNS=$/d; /^FallbackDNS=$/d' /etc/systemd/resolved.conf && systemctl restart systemd-resolved || true; fi; fi
+      - |
+        # Fix Nautilus navigation icons (from migration 1756609102.sh)
+        ln -snf /usr/share/icons/Adwaita/symbolic/actions/go-previous-symbolic.svg /usr/share/icons/Yaru/scalable/actions/go-previous-symbolic.svg
+        ln -snf /usr/share/icons/Adwaita/symbolic/actions/go-next-symbolic.svg /usr/share/icons/Yaru/scalable/actions/go-next-symbolic.svg
+        gtk-update-icon-cache /usr/share/icons/Yaru
+
+  - type: systemd
+    system:
+      enabled:
+        - systemd-networkd.service
+        - iwd.service
+        - sddm.service
+      disabled:
+        - systemd-networkd-wait-online.service
+      masked:
+        - systemd-networkd-wait-online.service
+    user:
+      enabled:
+        - omadora-battery-monitor.service
+        - omadora-battery-monitor.timer
+
+  - type: script
+    snippets:
+      - rm -rf /tmp/omadora
 
   - type: signing # this sets up the proper policy & signing files for signed images to work fully
