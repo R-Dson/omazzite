@@ -183,6 +183,14 @@ modules:
         - plymouth-scripts
         - plymouth-system-theme
         - gnome-calculator
+  - type: script
+    snippets:
+      - |
+        mkdir -p /etc/skel/.local/share/fonts
+        fc-cache -f -v
+  - type: script
+    snippets:
+      - cargo install --root /etc/skel/.local/share/omadora bluetui cargo-update eza impala
     remove:
       packages:
         - firefox
@@ -190,32 +198,51 @@ modules:
         - kitty
         - NetworkManager*
         - nwg-panel
-        - tuned-ppd
 
   # Move omadora setup earlier to fail fast if there are issues
   - type: script
     snippets:
-      - git clone https://github.com/elpritchos/omadora.git /tmp/omadora
+      - git clone https://github.com/elpritchos/omadora.git /etc/skel/.local/share/omadora
 
   - type: script
     snippets:
-      - sed -i 's/ --quiet//g' /tmp/omadora/config/uwsm/env
+      - ICON_DIR="/etc/skel/.local/share/applications/icons"
+      - mkdir -p "$ICON_DIR"
+      - cp /etc/skel/.local/share/omadora/applications/icons/*.png "$ICON_DIR/"
 
   - type: script
     snippets:
-      - mkdir -p /etc/skel/.config && cp -r /tmp/omadora/config/* /etc/skel/.config/
-      - mkdir -p /etc/fontconfig/conf.d && cp /tmp/omadora/config/fontconfig/fonts.conf /etc/fontconfig/conf.d/99-omadora-fonts.conf
-      - mkdir -p /etc/environment.d && cp /tmp/omadora/config/environment.d/fcitx.conf /etc/environment.d/99-omadora-fcitx.conf
-      - mkdir -p /usr/lib/systemd/user && cp -r /tmp/omadora/config/systemd/user/* /usr/lib/systemd/user/
-      - cp -r /tmp/omadora/default/hypr/* /etc/skel/.config/hypr/
-      - cp /tmp/omadora/default/bashrc /etc/skel/.bashrc
-      - cp /tmp/omadora/default/xcompose /etc/skel/.XCompose
-      - cp -r /tmp/omadora/themes/* /usr/share/themes
-      - mkdir -p /usr/share/icons/omadora && cp -r /tmp/omadora/applications/icons/* /usr/share/icons/omadora/
-      - mkdir -p /etc/skel/.local/share/omadora && cp /tmp/omadora/*.txt /etc/skel/.local/share/omadora/
-      - mkdir -p /etc/skel/.local/share/omadora/default && cp -r /tmp/omadora/default/* /etc/skel/.local/share/omadora/default/
-      - mkdir -p /etc/skel/.local/share/omadora/bin && cp -r /tmp/omadora/bin/* /etc/skel/.local/share/omadora/bin/
-      - mkdir -p /usr/share/plymouth/themes/sliced && cp -r /tmp/omadora/default/plymouth/* /usr/share/plymouth/themes/sliced
+      - |
+        # Run TUI installer from omadora/install/packaging/tuis.sh
+        ICON_DIR="/etc/skel/.local/share/applications/icons"
+        /etc/skel/.local/share/omadora/bin/omadora-tui-install "Disk Usage" "bash -c 'dust -r; read -n 1 -s'" float "$ICON_DIR/Disk Usage.png"
+  - type: script
+    snippets:
+      - mkdir -p /etc/skel/.config
+      - git clone https://github.com/LazyVim/starter /etc/skel/.config/nvim
+      - cp -R /etc/skel/.local/share/omadora/config/nvim/* /etc/skel/.config/nvim/
+      - rm -rf /etc/skel/.config/nvim/.git
+
+  - type: script
+    snippets:
+      - sed -i 's/ --quiet//g' /etc/skel/.local/share/omadora/config/uwsm/env
+
+  - type: script
+    snippets:
+      - cp -r /etc/skel/.local/share/omadora/config/* /etc/skel/.config/
+      - mkdir -p /etc/fontconfig/conf.d && cp /etc/skel/.local/share/omadora/config/fontconfig/fonts.conf /etc/fontconfig/conf.d/99-omadora-fonts.conf
+      - mkdir -p /etc/environment.d && cp /etc/skel/.local/share/omadora/config/environment.d/fcitx.conf /etc/environment.d/99-omadora-fcitx.conf
+      - mkdir -p /usr/lib/systemd/user && cp -r /etc/skel/.local/share/omadora/config/systemd/user/* /usr/lib/systemd/user/
+      - cp -r /etc/skel/.local/share/omadora/default/hypr/* /etc/skel/.config/hypr/
+      - cp /etc/skel/.local/share/omadora/default/bashrc /etc/skel/.bashrc
+      - cp /etc/skel/.local/share/omadora/default/xcompose /etc/skel/.XCompose
+      - cp -r /etc/skel/.local/share/omadora/themes/* /usr/share/themes
+      - mkdir -p /usr/share/icons/omadora && cp -r /etc/skel/.local/share/omadora/applications/icons/* /usr/share/icons/omadora/
+      - mkdir -p /usr/share/plymouth/themes/sliced && cp -r /etc/skel/.local/share/omadora/default/plymouth/* /usr/share/plymouth/themes/sliced
+
+  - type: script
+    snippets:
+      - /etc/skel/.local/share/omadora/bin/plymouth-set-default-theme -R sliced
 
   - type: script
     snippets:
@@ -223,7 +250,7 @@ modules:
 
   - type: script
     snippets:
-      - echo 'exec-once = omadora-restart-waybar' >> /etc/skel/.config/hypr/autostart.conf
+      - echo 'exec-once = sleep 5 && omadora-restart-waybar' >> /etc/skel/.config/hypr/autostart.conf
 
   - type: script
     snippets:
@@ -237,8 +264,8 @@ modules:
         mkdir -p /etc/skel/.config/nvim/lua/plugins
 
         # Copy branding files
-        cp /tmp/omadora/icon.txt /etc/skel/.config/omadora/branding/about.txt
-        cp /tmp/omadora/logo.txt /etc/skel/.config/omadora/branding/screensaver.txt
+        cp /etc/skel/.local/share/omadora/icon.txt /etc/skel/.config/omadora/branding/about.txt
+        cp /etc/skel/.local/share/omadora/logo.txt /etc/skel/.config/omadora/branding/screensaver.txt
 
   - type: script
     snippets:
@@ -322,9 +349,6 @@ modules:
     snippets:
       - systemctl set-default graphical.target
 
-  #- type: script
-  #  snippets:
-  #    - plymouth-set-default-theme -R sliced
 
   - type: script
     snippets:
@@ -337,7 +361,7 @@ modules:
       - |
         # Set up GPG configuration (replicates omadora's gpg.sh)
         mkdir -p /etc/gnupg
-        cp /tmp/omadora/default/gpg/dirmngr.conf /etc/gnupg/
+        cp /etc/skel/.local/share/omadora/default/gpg/dirmngr.conf /etc/gnupg/
         chmod 644 /etc/gnupg/dirmngr.conf
 
       - |
@@ -364,8 +388,5 @@ modules:
         - omadora-battery-monitor.service
         - omadora-battery-monitor.timer
 
-  - type: script
-    snippets:
-      - rm -rf /tmp/omadora
 
   - type: signing # this sets up the proper policy & signing files for signed images to work fully
