@@ -67,7 +67,6 @@ modules:
         - pkgconf-pkg-config
         - openssl-devel
         - libxcb-devel
-        - pipewire-devel
 
         # Text editors and IDEs
         - neovim
@@ -220,6 +219,10 @@ modules:
 
   - type: script
     snippets:
+      - echo 'bind = SUPER, F4, exec, pavucontrol' >> /etc/skel/.config/hypr/bindings/media.conf
+
+  - type: script
+    snippets:
       - echo 'exec-once = omadora-restart-waybar' >> /etc/skel/.config/hypr/autostart.conf
 
   - type: script
@@ -327,7 +330,7 @@ modules:
 
   - type: script
     snippets:
-      - cargo install --root /etc/skel/.local/share/omadora bluetui cargo-update eza impala wiremix
+      - cargo install --root /etc/skel/.local/share/omadora bluetui cargo-update eza impala
       - fc-cache -f -v
       - mkdir -p /var/lib/plocate && updatedb
       - rm -rf /etc/NetworkManager
