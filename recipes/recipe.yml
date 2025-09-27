@@ -203,6 +203,10 @@ modules:
 
   - type: script
     snippets:
+      - chmod +x /etc/skel/.local/share/omadora/bin/*
+
+  - type: script
+    snippets:
       - cargo install --root /etc/skel/.local/share/omadora bluetui cargo-update eza impala
 
 
