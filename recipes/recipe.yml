@@ -208,16 +208,12 @@ modules:
 
   - type: script
     snippets:
-      - ICON_DIR="/etc/skel/.local/share/applications/icons"
-      - mkdir -p "$ICON_DIR"
-      - cp /etc/skel/.local/share/omadora/applications/icons/*.png "$ICON_DIR/"
+      - mkdir -p "/etc/skel/.local/share/applications/icons"
+      - cp /etc/skel/.local/share/omadora/applications/icons/*.png /etc/skel/.local/share/applications/icons/
 
   - type: script
     snippets:
-      - |
-        # Run TUI installer from omadora/install/packaging/tuis.sh
-        ICON_DIR="/etc/skel/.local/share/applications/icons"
-        /etc/skel/.local/share/omadora/bin/omadora-tui-install "Disk Usage" "bash -c 'dust -r; read -n 1 -s'" float "$ICON_DIR/Disk Usage.png"
+      - /etc/skel/.local/share/omadora/bin/omadora-tui-install "Disk Usage" "bash -c 'dust -r; read -n 1 -s'" float "/etc/skel/.local/share/applications/icons/Disk Usage.png"
   - type: script
     snippets:
       - mkdir -p /etc/skel/.config
