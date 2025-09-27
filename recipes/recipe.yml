@@ -242,9 +242,9 @@ modules:
       - mkdir -p /usr/share/icons/omadora && cp -r /etc/skel/.local/share/omadora/applications/icons/* /usr/share/icons/omadora/
       - mkdir -p /usr/share/plymouth/themes/sliced && cp -r /etc/skel/.local/share/omadora/default/plymouth/* /usr/share/plymouth/themes/sliced
 
-  - type: script
-    snippets:
-      - /etc/skel/.local/share/omadora/bin/plymouth-set-default-theme -R sliced
+  # - type: script
+  #   snippets:
+  #     - /etc/skel/.local/share/omadora/bin/plymouth-set-default-theme -R sliced
 
   - type: script
     snippets:
