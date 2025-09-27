@@ -183,6 +183,14 @@ modules:
         - plymouth-scripts
         - plymouth-system-theme
         - gnome-calculator
+    remove:
+      packages:
+        - firefox
+        - firefox-langpacks
+        - kitty
+        - NetworkManager*
+        - nwg-panel
+
   - type: script
     snippets:
       - |
@@ -191,13 +199,6 @@ modules:
   - type: script
     snippets:
       - cargo install --root /etc/skel/.local/share/omadora bluetui cargo-update eza impala
-    remove:
-      packages:
-        - firefox
-        - firefox-langpacks
-        - kitty
-        - NetworkManager*
-        - nwg-panel
 
   # Move omadora setup earlier to fail fast if there are issues
   - type: script
@@ -349,7 +350,6 @@ modules:
     snippets:
       - systemctl set-default graphical.target
 
-
   - type: script
     snippets:
       - rm -rf /etc/NetworkManager
@@ -387,6 +387,5 @@ modules:
       enabled:
         - omadora-battery-monitor.service
         - omadora-battery-monitor.timer
-
 
   - type: signing # this sets up the proper policy & signing files for signed images to work fully
