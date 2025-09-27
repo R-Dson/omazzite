@@ -196,14 +196,15 @@ modules:
       - |
         mkdir -p /etc/skel/.local/share/fonts
         fc-cache -f -v
-  - type: script
-    snippets:
-      - cargo install --root /etc/skel/.local/share/omadora bluetui cargo-update eza impala
-
   # Move omadora setup earlier to fail fast if there are issues
   - type: script
     snippets:
       - git clone https://github.com/elpritchos/omadora.git /etc/skel/.local/share/omadora
+
+  - type: script
+    snippets:
+      - cargo install --root /etc/skel/.local/share/omadora bluetui cargo-update eza impala
+
 
   - type: script
     snippets:
