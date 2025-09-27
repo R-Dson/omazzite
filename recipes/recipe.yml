@@ -288,7 +288,7 @@ modules:
   - type: script
     snippets:
       - echo -e "#!/bin/bash\nprofile=\"\$1\"\nif sudo tuned-adm profile \"\$profile\"; then\n    notify-send -a \"PowerProfiles\" \"Power profile set to '\$profile'\"\nelse\n    notify-send -a \"PowerProfiles\" \"Failed to set power profile to '\$profile'\"\n    exit 1\nfi" > /etc/skel/.local/share/omadora/bin/omadora-powerprofiles-set && chmod +x /etc/skel/.local/share/omadora/bin/omadora-powerprofiles-set
-      - echo -e '#!/bin/bash\n# List available tuned profiles and format the output\ntuned-adm list | awk '\''/^Available profiles:/ {flag=1; next} /^Current active profile:/ {flag=0} flag && $1 !~ /^[[:space:]]*$/ {print $1}'\''' > /etc/skel/.local/share/omadora/bin/omadora-powerprofiles-list && chmod +x /etc/skel/.local/share/omadora/bin/omadora-powerprofiles-list
+      - echo -e '#!/bin/bash\ntuned-adm list | awk '\''/^ *- / {print}'\'' | sed -E '\''s/^ *- ([^[:space:]]+).*$/\1/'\'' | xargs -n1' > /etc/skel/.local/share/omadora/bin/omadora-powerprofiles-list && chmod +x /etc/skel/.local/share/omadora/bin/omadora-powerprofiles-list
 
   - type: default-flatpaks
     configurations:
