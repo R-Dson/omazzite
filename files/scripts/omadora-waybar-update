@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# This script checks for rpm-ostree and Flatpak updates and outputs a Waybar-compatible JSON string.
+# It also handles triggering the full update process when clicked in Waybar.
+
+# --- Check for updates and generate Waybar JSON ---
+check_updates_for_waybar() {
+    local updates_found=0
+    local messages=()
+
+    # Check for rpm-ostree updates
+    if command -v rpm-ostree &> /dev/null && rpm-ostree upgrade --check &> /dev/null; then
+        messages+=("rpm-ostree updates available")
+        updates_found=1
+    fi
+
+    # Check for Flatpak updates
+    if command -v flatpak &> /dev/null; then
+        flatpak update --appstream -y &> /dev/null || true
+        if flatpak remote-ls --updates --app --runtime --columns=application | grep -q .; then
+            messages+=("Flatpak updates available")
+            updates_found=1
+        fi
+    fi
+
+    # Prepare Waybar output
+    if [[ "$updates_found" -eq 1 ]]; then
+        local tooltip_message=$(printf "%s\n" "${messages[@]}")
+        # Remove trailing newline
+        tooltip_message=${tooltip_message%$'\n'}
+        echo '{"text": "󰮤 Update", "alt": "update-available", "tooltip": "'"${tooltip_message}"'", "class": "update-available"}'
+    else
+        echo '{"text": "󰃚 Up to date", "alt": "up-to-date", "tooltip": "System is up to date", "class": "up-to-date"}'
+    fi
+}
+
+# --- Run the full update process ---
+run_full_update() {
+    # This command is intended to be run inside a terminal window
+    echo "Starting system update..."
+
+    # rpm-ostree system update
+    if command -v rpm-ostree &> /dev/null; then
+        echo -e "\n\e[32mUpdating system (rpm-ostree)...\e[0m"
+        sudo rpm-ostree upgrade
+    fi
+
+    # Flatpak updates
+    if command -v flatpak &> /dev/null; then
+        echo -e "\n\e[32mUpdating Flatpaks...\e[0m"
+        flatpak update -y
+    fi
+
+    echo -e "\n\e[32mUpdate process complete.\e[0m"
+    echo "It is recommended to reboot for system updates to apply."
+    echo "Press any key to close this window."
+    read -n 1 -s
+}
+
+# --- Main script logic ---
+if [[ "$1" == "--update" ]]; then
+    # This case is executed by the terminal launched from the on-click event
+    run_full_update
+elif [[ "$1" == "--launch-update" ]]; then
+    # This case is executed by the on-click event in Waybar
+    # It launches a new terminal to run the full update process
+    alacritty -e bash -c "$0 --update" &
+else
+    # Default case: output JSON for Waybar
+    check_updates_for_waybar
+fi

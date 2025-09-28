@@ -1,0 +1,45 @@
+#!/bin/bash
+
+MARKER_FILE="$HOME/.local/state/omadora/first_login_complete"
+LOG_FILE="$HOME/.local/state/omadora/first-login.log"
+
+# Create log directory
+mkdir -p "$(dirname "$LOG_FILE")"
+mkdir -p "$(dirname "$MARKER_FILE")"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+# Check if the marker file exists
+if [ -f "$MARKER_FILE" ]; then
+    echo "First login setup already completed. Exiting."
+    exit 0
+fi
+
+echo "Starting first login setup..."
+
+echo "Cloning required repositories..."
+# Clone omadora and LazyVim starter
+git clone https://github.com/LazyVim/starter "$HOME/.config/nvim"
+rm -rf "$HOME/.config/nvim/.git"
+
+
+# Copy LazyVim configurations
+cp -rf "$HOME/.local/share/omadora/config/nvim/"* "$HOME/.config/nvim/"
+
+
+echo "Installing user-specific packages..."
+# Install cargo and pipx packages. This is network-dependent and can take time.
+cargo install --root "$HOME/.local/share/omadora" bluetui cargo-update eza impala
+pipx install terminaltexteffects
+
+xdg-user-dirs-update
+
+# Refresh font cache
+fc-cache -f -v
+
+# Create the marker file to prevent future executions
+touch "$MARKER_FILE"
+
+echo "First login setup complete."
+echo ""
+echo "Press Enter to continue..."
+read
