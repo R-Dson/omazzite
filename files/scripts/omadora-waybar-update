@@ -3,6 +3,8 @@
 # This script checks for rpm-ostree and Flatpak updates and outputs a Waybar-compatible JSON string.
 # It also handles triggering the full update process when clicked in Waybar.
 
+set -oue pipefail
+
 # --- Check for updates and generate Waybar JSON ---
 check_updates_for_waybar() {
     local updates_found=0

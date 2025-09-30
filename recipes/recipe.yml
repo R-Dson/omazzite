@@ -97,6 +97,7 @@ modules:
         - tldr
         - usbutils
         - whois
+        - wiremix
 
         # Fonts
         - cascadia-code-nf-fonts
@@ -240,6 +241,15 @@ modules:
   - type: script
     snippets:
       - chmod +x /usr/bin/omadora-first-login
+
+  - type: files
+    files:
+      - source: scripts/omazzite-personal-setup
+        destination: /usr/bin/omazzite-personal-setup
+        mode: 0755
+  - type: script
+    snippets:
+      - chmod +x /usr/bin/omazzite-personal-setup
 
 
   - type: script

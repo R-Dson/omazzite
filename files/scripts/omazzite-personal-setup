@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -oue pipefail
+
+#warning overwrite config files
+echo "This will overwrite your nvim and ghostty config files. Press enter to continue or ctrl-c to abort."
+read  # wait for user to press
+
+# nvim
+git clone https://github.com/ecosse3/nvim.git /tmp/nvim
+if [ -d "$HOME/.config/nvim" ]; then
+    mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak"
+fi
+mv /tmp/nvim "$HOME/.config/nvim"
+
+# ghostty config
+
+mkdir -p "$HOME/.config/ghostty"
+cat > "$HOME/.config/ghostty/config" <<EOL
+theme = iTerm2 Tango Dark
+bold-is-bright = true
+background = #121212
+foreground = #ffffff
+selection-background = #5b595c
+selection-foreground = #fcfcfa
+selection-invert-fg-bg = true
+cursor-color = #c1c0c0
+cursor-text = #c1c0c0
+cursor-opacity = 0.8
+cursor-style = bar
+palette = 0=#000000
+palette = 1=#fc4346
+palette = 2=#50fb7c
+palette = 3=#f0fb8c
+palette = 4=#49baff
+palette = 5=#fc4cb4
+palette = 6=#8be9fe
+palette = 7=#ededec
+palette = 8=#555555
+palette = 9=#fc4346
+palette = 10=#50fb7c
+palette = 11=#f0fb8c
+palette = 12=#49baff
+palette = 13=#fc4cb4
+palette = 14=#8be9fe
+palette = 15=#ededec
+font-size = 11 
+font-thicken = true
+font-family = "JetBrainsMono Nerd Font Mono"
+window-title-font-family="JetBrainsMono Nerd Font Mono"
+window-height=30
+window-width=110
+EOL
+
+MONITOR_CONF=$HOME/.config/hypr/monitors.conf
+sed -i 's/env = GDK_SCALE,2/env = GDK_SCALE,1/g' "$MONITOR_CONF"
+sed -i 's/monitor=,preferred,auto,auto/monitor=,preferred,auto,1/g' "$MONITOR_CONF"

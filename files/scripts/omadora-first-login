@@ -1,12 +1,20 @@
 #!/bin/bash
 
+set -oue pipefail
+
 MARKER_FILE="$HOME/.local/state/omadora/first_login_complete"
 LOG_FILE="$HOME/.local/state/omadora/first-login.log"
+
+OMADORA_INSTALL="$HOME/.local/share/omadora"
 
 # Create log directory
 mkdir -p "$(dirname "$LOG_FILE")"
 mkdir -p "$(dirname "$MARKER_FILE")"
 exec > >(tee -a "$LOG_FILE") 2>&1
+
+# detect keyboard layout
+echo "Detecting keyboard layout..."
+$OMADORA_INSTALL/install/config/detect-keyboard-layout.sh
 
 # Check if the marker file exists
 if [ -f "$MARKER_FILE" ]; then

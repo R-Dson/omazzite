@@ -4,6 +4,8 @@
 # by operating on the /etc/skel directory. It takes the path to the cloned
 # omadora repository as its first argument.
 
+set -oue pipefail
+
 OMADORA_REPO_PATH="${1:-/etc/skel/.local/share/omadora}"
 
 if [ -z "$1" ]; then
@@ -67,7 +69,7 @@ echo -e '#!/bin/bash\ntuned-adm list | awk '\''/^ *- / {print}'\'' | sed -E '\''
 
 echo "Applying sed modifications to omadora scripts and configs..."
 sed -i 's/$(powerprofilesctl get)/$(tuned-adm active | awk '\''{print $NF}'\'')/g' "$OMADORA_REPO_PATH/bin/omadora-menu"
-sed -i 's/alacritty --class=Wiremix -e wiremix "\$@"/alacritty --class=Pavucontrol -e pavucontrol "\$@"/g' "$OMADORA_REPO_PATH/bin/omadora-launch-audio"
+# sed -i 's/alacritty --class=Wiremix -e wiremix "\$@"/alacritty --class=Pavucontrol -e pavucontrol "\$@"/g' "$OMADORA_REPO_PATH/bin/omadora-launch-audio"
 sed -i 's/ --quiet//g' "$SKEL_DIR/.config/uwsm/env"
 
 echo "Overwriting omadora-launch-audio with pavucontrol setup..."
@@ -79,7 +81,7 @@ EOF
 
 echo "Appending configurations to Hyprland config files in $SKEL_DIR..."
 echo 'bind = SUPER, F4, exec, pavucontrol' >> "$SKEL_DIR/.config/hypr/bindings/media.conf"
-echo 'exec-once = sleep 5 && pkill -x "waybar" && setsid uwsm app -- "waybar" >/dev/null 2>&1 &' >> "$SKEL_DIR/.config/hypr/autostart.conf"
+echo 'exec-once = sleep 2 && pkill -x "waybar" && setsid uwsm app -- "waybar" >/dev/null 2>&1 &' >> "$SKEL_DIR/.config/hypr/autostart.conf"
 
 echo "Updating Waybar config in omadora repository..."
 # Create temporary file for jq output to avoid issues with in-place editing
