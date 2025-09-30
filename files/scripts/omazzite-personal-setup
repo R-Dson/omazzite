@@ -8,7 +8,7 @@ read  # wait for user to press
 
 # nvim
 echo "Setting nvim config"
-git clone https://github.com/ecosse3/nvim.git "$HOME/.config/nvim.tmp"
+git clone https://github.com/adibhanna/nvim.git "$HOME/.config/nvim.tmp"
 if [ -d "$HOME/.config/nvim" ]; then
     mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak"
 fi

@@ -17,25 +17,6 @@ modules:
       - source: system
         destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
 
-  - type: files
-    files:
-      - source: scripts/omadora-build-time-setup.sh
-        destination: /usr/bin/omadora-build-time-setup.sh
-        mode: 0755
-
-  - type: script
-    snippets:
-      - chmod +x /usr/bin/omadora-build-time-setup.sh
-
-  - type: script
-    snippets:
-      - git clone https://github.com/elpritchos/omadora.git /etc/skel/.local/share/omadora
-      - /usr/bin/omadora-build-time-setup.sh /etc/skel/.local/share/omadora
-
-  - type: script
-    snippets:
-      - cargo install --root /usr bluetui cargo-update eza impala
-
   - type: script
     snippets:
       - |
@@ -210,6 +191,45 @@ modules:
         - kitty
         - NetworkManager*
         - nwg-panel
+
+  - type: files
+    files:
+      - source: system
+        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
+
+  - type: files
+    files:
+      - source: scripts/omadora-build-time-setup.sh
+        destination: /usr/bin/omadora-build-time-setup.sh
+        mode: 0755
+
+  - type: script
+    snippets:
+      - chmod +x /usr/bin/omadora-build-time-setup.sh
+
+  - type: script
+    snippets:
+      - git clone https://github.com/elpritchos/omadora.git /etc/skel/.local/share/omadora
+      - /usr/bin/omadora-build-time-setup.sh /etc/skel/.local/share/omadora
+
+  - type: script
+    snippets:
+      - cargo install --root /usr bluetui cargo-update eza impala
+
+  - type: script
+    snippets:
+      - |
+        # Remove KDE desktop packages to reduce image size
+        # Use a simpler approach that doesn't rely on complex sed patterns
+        dnf5 remove -y kde-settings kde-settings-pulseaudio kde-settings-minimal || true
+        dnf5 remove -y plasma-workspace plasma-desktop plasma-systemsettings || true
+        dnf5 remove -y kwin kwin-wayland kwin-x11 || true
+        dnf5 remove -y kde-cli-tools kde-gtk-config || true
+        # Remove any remaining KDE packages with wildcard
+        dnf5 remove -y kde-settings* plasma* kwin* kde-cli* kde-gtk* || true
+        # Clean DNF cache to reduce image size
+        dnf5 clean all
+        rm -rf /var/cache/dnf/*
   # Move omadora setup earlier to fail fast if there are issues
 
 
