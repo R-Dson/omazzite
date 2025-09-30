@@ -31,12 +31,6 @@ mkdir -p "$SKEL_DIR/.config/omadora/current"
 mkdir -p "$SKEL_DIR/.config/omadora/branding"
 mkdir -p "$SKEL_DIR/.config/btop/themes"
 mkdir -p "$SKEL_DIR/.config/mako"
-mkdir -p "$SKEL_DIR/.config/nvim"
-mkdir -p "$SKEL_DIR/.config/nvim/lua/plugins"
-
-echo "Cloning LazyVim starter into $SKEL_DIR/.config/nvim..."
-git clone https://github.com/LazyVim/starter "$SKEL_DIR/.config/nvim"
-rm -rf "$SKEL_DIR/.config/nvim/.git"
 
 echo "Copying omadora configuration files to $SKEL_DIR..."
 cp -r "$OMADORA_REPO_PATH/config/"* "$SKEL_DIR/.config/"
@@ -46,7 +40,11 @@ cp "$OMADORA_REPO_PATH/default/xcompose" "$SKEL_DIR/.XCompose"
 cp "$OMADORA_REPO_PATH/applications/icons/"*.png "$SKEL_DIR/.local/share/applications/icons/"
 cp "$OMADORA_REPO_PATH/icon.txt" "$SKEL_DIR/.config/omadora/branding/about.txt"
 cp "$OMADORA_REPO_PATH/logo.txt" "$SKEL_DIR/.config/omadora/branding/screensaver.txt"
-cp -R "$OMADORA_REPO_PATH/config/nvim/"* "$SKEL_DIR/.config/nvim/"
+
+echo "Cloning LazyVim starter into $SKEL_DIR/.config/nvim..."
+rm -rf "$SKEL_DIR/.config/nvim"
+git clone https://github.com/LazyVim/starter "$SKEL_DIR/.config/nvim"
+rm -rf "$SKEL_DIR/.config/nvim/.git"
 
 echo "Copying systemd user services to system-wide directory..."
 mkdir -p /usr/lib/systemd/user

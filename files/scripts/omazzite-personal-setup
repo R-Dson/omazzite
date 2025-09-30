@@ -7,11 +7,11 @@ echo "This will overwrite your nvim and ghostty config files. Press enter to con
 read  # wait for user to press
 
 # nvim
-git clone https://github.com/ecosse3/nvim.git /tmp/nvim
+git clone https://github.com/ecosse3/nvim.git "$HOME/.config/nvim.tmp"
 if [ -d "$HOME/.config/nvim" ]; then
     mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak"
 fi
-mv /tmp/nvim "$HOME/.config/nvim"
+mv "$HOME/.config/nvim.tmp" "$HOME/.config/nvim"
 
 # ghostty config
 
