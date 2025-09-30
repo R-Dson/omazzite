@@ -46,6 +46,12 @@ rm -rf "$SKEL_DIR/.config/nvim"
 git clone https://github.com/LazyVim/starter "$SKEL_DIR/.config/nvim"
 rm -rf "$SKEL_DIR/.config/nvim/.git"
 
+# echo "Copying custom LazyVim configurations..."
+# cp -rf "$OMADORA_REPO_PATH/config/nvim/"* "$SKEL_DIR/.config/nvim/"
+
+echo "Installing user-specific packages..."
+pipx install terminaltexteffects
+
 echo "Copying systemd user services to system-wide directory..."
 mkdir -p /usr/lib/systemd/user
 cp "$OMADORA_REPO_PATH/config/systemd/user/omadora-battery-monitor.service" /usr/lib/systemd/user/

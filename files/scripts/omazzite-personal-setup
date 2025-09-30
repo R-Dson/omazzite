@@ -7,19 +7,22 @@ echo "This will overwrite your nvim and ghostty config files. Press enter to con
 read  # wait for user to press
 
 # nvim
+echo "Setting nvim config"
 git clone https://github.com/ecosse3/nvim.git "$HOME/.config/nvim.tmp"
 if [ -d "$HOME/.config/nvim" ]; then
     mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak"
 fi
 mv "$HOME/.config/nvim.tmp" "$HOME/.config/nvim"
 
-# ghostty config
 
+# ghostty config
+echo "Setting ghostty config"
 mkdir -p "$HOME/.config/ghostty"
+
 cat > "$HOME/.config/ghostty/config" <<EOL
 theme = iTerm2 Tango Dark
 bold-is-bright = true
-background = #121212
+background = #080808
 foreground = #ffffff
 selection-background = #5b595c
 selection-foreground = #fcfcfa
@@ -52,6 +55,21 @@ window-height=30
 window-width=110
 EOL
 
+# config
+echo "Setting monitor config"
 MONITOR_CONF=$HOME/.config/hypr/monitors.conf
 sed -i 's/env = GDK_SCALE,2/env = GDK_SCALE,1/g' "$MONITOR_CONF"
 sed -i 's/monitor=,preferred,auto,auto/monitor=,preferred,auto,1/g' "$MONITOR_CONF"
+
+# pip packages
+echo "Installing pip packages"
+pip install uv
+
+
+# Aider
+echo "Installing Aider"
+uv tool install --force --python python3.12 aider-chat
+uv tool update-shell
+
+
+echo "Setup complete. Please restart your terminal."

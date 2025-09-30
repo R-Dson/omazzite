@@ -34,6 +34,10 @@ modules:
 
   - type: script
     snippets:
+      - cargo install --root /usr bluetui cargo-update eza impala
+
+  - type: script
+    snippets:
       - |
         # Remove KDE desktop packages to reduce image size
         # Use a simpler approach that doesn't rely on complex sed patterns
@@ -224,7 +228,6 @@ modules:
       enabled:
         - omadora-battery-monitor.service
         - omadora-battery-monitor.timer
-        - omadora-first-login.service
 
   - type: files
     files:
@@ -233,14 +236,9 @@ modules:
         mode: 0755
 
 
-  - type: files
-    files:
-      - source: scripts/omadora-first-login
-        destination: /usr/bin/omadora-first-login
-        mode: 0755
   - type: script
     snippets:
-      - chmod +x /usr/bin/omadora-first-login
+      - echo 'exec-once = sleep 2 && $HOME/.local/share/omadora/install/config/detect-keyboard-layout.sh' >> /etc/skel/.config/hypr/autostart.conf
 
   - type: files
     files:
@@ -252,8 +250,5 @@ modules:
       - chmod +x /usr/bin/omazzite-personal-setup
 
 
-  - type: script
-    snippets:
-      - echo 'exec-once = sleep 3 && setsid uwsm app -- alacritty --class=Omadora --title=Omadora -e bash -c "/usr/bin/omadora-first-login"' >> /etc/skel/.config/hypr/autostart.conf
 
   - type: signing # this sets up the proper policy & signing files for signed images to work fully
