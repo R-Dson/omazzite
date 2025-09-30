@@ -14,6 +14,24 @@ if [ -d "$HOME/.config/nvim" ]; then
 fi
 mv "$HOME/.config/nvim.tmp" "$HOME/.config/nvim"
 
+echo "Downloading jdtls.lua config"
+mkdir -p "$HOME/.config/nvim/lsp"
+curl -sSL https://raw.githubusercontent.com/neovim/nvim-lspconfig/refs/heads/master/lsp/jdtls.lua -o "$HOME/.config/nvim/lsp/jdtls.lua"
+echo "Downloading pyright.lua config"
+curl -sSL https://raw.githubusercontent.com/neovim/nvim-lspconfig/refs/heads/master/lsp/pyright.lua -o "$HOME/.config/nvim/lsp/pyright.lua"
+
+# Add jdtls and pyright to lsp.lua
+echo "Updating LSP configuration"
+LSP_FILE="$HOME/.config/nvim/lua/core/lsp.lua"
+if [ -f "$LSP_FILE" ]; then
+    # Use sed to insert jdtls and pyright after vim.lsp.enable({
+    sed -i '/vim\.lsp\.enable({/a\    "jdtls",\
+    "pyright",' "$LSP_FILE"
+    echo "Successfully added jdtls and pyright to $LSP_FILE"
+else
+    echo "Warning: $LSP_FILE not found, skipping LSP configuration update"
+fi
+
 
 # ghostty config
 echo "Setting ghostty config"
