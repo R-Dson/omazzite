@@ -49,6 +49,7 @@ modules:
         - kitty
         - zoxide
         - ghostty
+        - ripgrep
 
         # File managers and utilities
         - bat
@@ -269,6 +270,14 @@ modules:
     snippets:
       - chmod +x /usr/bin/omazzite-personal-setup
 
-
+  - type: script
+    # Configure Homebrew for multi-user access.
+    # 1. Create a 'brew' group.
+    # 2. Set ownership and permissions for the Homebrew directory.
+    # 3. Configure /etc/login.defs to automatically add new users to the 'brew' group.
+    snippets:
+      - groupadd -r brew
+      - if [ -d "/home/linuxbrew" ]; then chown -R :brew /home/linuxbrew && chmod -R g+w /home/linuxbrew && chmod g+s /home/linuxbrew; fi
+      - sed -i 's/USERGROUPS_ENAB yes/USERGROUPS_ENAB no/' /etc/login.defs && sed -i 's/#EXTRA_GROUPS/EXTRA_GROUPS/' /etc/login.defs && sed -i '/^EXTRA_GROUPS/ s/$/,brew/' /etc/login.defs
 
   - type: signing # this sets up the proper policy & signing files for signed images to work fully

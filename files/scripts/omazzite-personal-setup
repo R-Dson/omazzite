@@ -24,9 +24,10 @@ curl -sSL https://raw.githubusercontent.com/neovim/nvim-lspconfig/refs/heads/mas
 echo "Updating LSP configuration"
 LSP_FILE="$HOME/.config/nvim/lua/core/lsp.lua"
 if [ -f "$LSP_FILE" ]; then
-    # Use sed to insert jdtls and pyright after vim.lsp.enable({
-    sed -i '/vim\.lsp\.enable({/a\    "jdtls",\
-    "pyright",' "$LSP_FILE"
+    # Clear existing entries within the vim.lsp.enable block, then insert the new ones.
+    # This ensures only the specified LSPs are enabled.
+    sed -i '/vim\.lsp\.enable({/,/})/{/vim\.lsp\.enable({/!{/}/!d}}' "$LSP_FILE"
+    sed -i '/vim\.lsp\.enable({/a \    "jdtls",\n    "pyright",' "$LSP_FILE"
     echo "Successfully added jdtls and pyright to $LSP_FILE"
 else
     echo "Warning: $LSP_FILE not found, skipping LSP configuration update"
@@ -78,6 +79,16 @@ echo "Setting monitor config"
 MONITOR_CONF=$HOME/.config/hypr/monitors.conf
 sed -i 's/env = GDK_SCALE,2/env = GDK_SCALE,1/g' "$MONITOR_CONF"
 sed -i 's/monitor=,preferred,auto,auto/monitor=,preferred,auto,1/g' "$MONITOR_CONF"
+
+# Set default terminal
+echo "Setting default terminal"
+UWSM_CONF=$HOME/.config/uwsm/default
+if [ -f "$UWSM_CONF" ]; then
+    sed -i 's/alacritty/ghostty/g' "$UWSM_CONF"
+    echo "Successfully set default terminal to ghostty"
+else
+    echo "Warning: $UWSM_CONF not found, skipping default terminal configuration"
+fi
 
 # pip packages
 echo "Installing pip packages"

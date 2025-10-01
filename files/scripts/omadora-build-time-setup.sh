@@ -73,15 +73,7 @@ echo -e '#!/bin/bash\ntuned-adm list | awk '\''/^ *- / {print}'\'' | sed -E '\''
 
 echo "Applying sed modifications to omadora scripts and configs..."
 sed -i 's/$(powerprofilesctl get)/$(tuned-adm active | awk '\''{print $NF}'\'')/g' "$OMADORA_REPO_PATH/bin/omadora-menu"
-# sed -i 's/alacritty --class=Wiremix -e wiremix "\$@"/alacritty --class=Pavucontrol -e pavucontrol "\$@"/g' "$OMADORA_REPO_PATH/bin/omadora-launch-audio"
 sed -i 's/ --quiet//g' "$SKEL_DIR/.config/uwsm/env"
-
-echo "Overwriting omadora-launch-audio with pavucontrol setup..."
-cat <<'EOF' > "$OMADORA_REPO_PATH/bin/omadora-launch-audio"
-#!/bin/bash
-
-exec setsid uwsm app -- pavucontrol
-EOF
 
 echo "Appending configurations to Hyprland config files in $SKEL_DIR..."
 echo 'bind = SUPER, F4, exec, pavucontrol' >> "$SKEL_DIR/.config/hypr/bindings/media.conf"
@@ -91,12 +83,9 @@ echo "Updating Waybar config in omadora repository..."
 # Create temporary file for jq output to avoid issues with in-place editing
 jq '(.["modules-center"][] | select(."custom/update"))["custom/update"] = { "exec": "/usr/bin/omadora-waybar-update", "on-click": "/usr/bin/omadora-waybar-update --launch-update", "return-type": "json", "interval": 3600 }' "$OMADORA_REPO_PATH/config/waybar/config.jsonc" > /tmp/waybar.jsonc && mv /tmp/waybar.jsonc "$OMADORA_REPO_PATH/config/waybar/config.jsonc"
 
-echo "Creating symlinks for themes in $SKEL_DIR..."
-# Note: The original script iterates /usr/share/themes/*, which is a runtime action.
-# For build-time, we'll assume the themes are already available in the omadora repo
-# or directly linked. For now, we'll just link the specific theme files.
-# If /usr/share/themes is available at build time, the loop below can be uncommented.
-# for theme in /usr/share/themes/*; do if [ -d "$theme" ]; then ln -nfs "$theme" "$SKEL_DIR/.config/omadora/themes/"; fi; done
+echo "Copying Omadora themes..."
+# Copy all themes from the cloned omadora repository to the user's config directory.
+cp -r "$OMADORA_REPO_PATH/themes/"* "$SKEL_DIR/.config/omadora/themes/"
 ln -snf "$OMADORA_REPO_PATH/themes/rose-pine-darker" "$SKEL_DIR/.config/omadora/current/theme"
 ln -snf "$SKEL_DIR/.config/omadora/current/theme/backgrounds/01_background.png" "$SKEL_DIR/.config/omadora/current/background"
 ln -snf "$SKEL_DIR/.config/omadora/current/theme/neovim.lua" "$SKEL_DIR/.config/nvim/lua/plugins/theme.lua"
