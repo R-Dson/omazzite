@@ -88,6 +88,9 @@ modules:
         # Fonts
         - cascadia-code-nf-fonts
         - cascadia-mono-nf-fonts
+        - fira-code-fonts
+        - mozilla-fira-fonts
+        - cascadia-fonts-all
         - fontawesome-fonts-all
         - google-noto-fonts-common
 
