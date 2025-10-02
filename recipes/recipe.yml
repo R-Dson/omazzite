@@ -46,7 +46,6 @@ modules:
         # Terminal and shell utilities
         - starship
         - alacritty
-        - kitty
         - zoxide
         - ghostty
         - ripgrep
