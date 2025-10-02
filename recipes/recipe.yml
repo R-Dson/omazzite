@@ -48,7 +48,6 @@ modules:
         - alacritty
         - zoxide
         - ghostty
-        - ripgrep
 
         # File managers and utilities
         - bat
@@ -88,8 +87,6 @@ modules:
         - cascadia-code-nf-fonts
         - cascadia-mono-nf-fonts
         - fira-code-fonts
-        - mozilla-fira-fonts
-        - cascadia-fonts-all
         - fontawesome-fonts-all
         - google-noto-fonts-common
 
@@ -186,7 +183,6 @@ modules:
         - plymouth-core-libs
         - plymouth-scripts
         - plymouth-system-theme
-        - gnome-calculator
     remove:
       packages:
         - firefox
