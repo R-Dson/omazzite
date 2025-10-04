@@ -1,6 +1,6 @@
 # omazzite &nbsp; [![bluebuild build badge](https://github.com/r-dson/omazzite/actions/workflows/build.yml/badge.svg)](https://github.com/r-dson/omazzite/actions/workflows/build.yml)
 
-This is a custom atomic Fedora image, built upon the `bazzite-dx-nvidia` base. It provides Hyprland desktop environment, based on the [Omarchy](https://omarchy.org) implementation and patterns, with the configuration of [omadora](https://github.com/elpritchos/omadora).
+This is a custom atomic Fedora image, built upon the `bazzite-dx` and `bazzite-dx-nvidia` bases. It provides Hyprland desktop environment, based on the [Omarchy](https://omarchy.org) implementation and patterns, with the configuration of [omadora](https://github.com/elpritchos/omadora).
 
 
 
