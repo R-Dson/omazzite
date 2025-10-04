@@ -2,10 +2,12 @@
 
 This is a custom atomic Fedora image, built upon the `bazzite-dx-nvidia` base. It provides Hyprland desktop environment, based on the [Omarchy](https://omarchy.org) implementation and patterns, with the configuration of [omadora](https://github.com/elpritchos/omadora).
 
+
+
 ## Installation
 
 > [!WARNING]  
-> This is an experimental, try at your own discretion.
+> This is experimental, try at your own discretion.
 
 To rebase an existing atomic Fedora installation to the latest build:
 
@@ -26,11 +28,9 @@ To rebase an existing atomic Fedora installation to the latest build:
   systemctl reboot
   ```
 
+> You may need to create a new user to have the default config files applied.
+
 The `latest` tag will automatically point to the latest build. That build will still always use the Fedora version specified in `recipe.yml`, so you won't get accidentally updated to the next major version.
-
-## ISO
-
-If build on Fedora Atomic, you can generate an offline ISO with the instructions available [here](https://blue-build.org/learn/universal-blue/#fresh-install-from-an-iso). These ISOs cannot unfortunately be distributed on GitHub for free due to large sizes, so for public projects something else has to be used for hosting.
 
 ## Verification
 
