@@ -1,0 +1,281 @@
+---
+# yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
+# image will be published to ghcr.io/<user>/<name>
+name: omazzite
+# description will be included in the image's metadata
+description: This is my personal OS image.
+
+# the base image to build on top of (FROM) and the version tag to use
+base-image: ghcr.io/ublue-os/bazzite-dx
+image-version: latest # latest is also supported if you want new updates ASAP
+
+# module configuration, executed in order
+# you can include multiple instances of the same module
+modules:
+  - type: files
+    files:
+      - source: system
+        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
+
+  - type: script
+    snippets:
+      - |
+        # Remove KDE desktop packages to reduce image size
+        # Use a simpler approach that doesn't rely on complex sed patterns
+        dnf5 remove -y kde-settings kde-settings-pulseaudio kde-settings-minimal || true
+        dnf5 remove -y plasma-workspace plasma-desktop plasma-systemsettings || true
+        dnf5 remove -y kwin kwin-wayland kwin-x11 || true
+        dnf5 remove -y kde-cli-tools kde-gtk-config || true
+        # Remove any remaining KDE packages with wildcard
+        dnf5 remove -y kde-settings* plasma* kwin* kde-cli* kde-gtk* || true
+        # Clean DNF cache to reduce image size
+        dnf5 clean all
+        rm -rf /var/cache/dnf/*
+
+  - type: dnf
+    repos:
+      copr:
+        - solopasha/hyprland
+        - jdxcode/mise
+        - atim/starship
+        - scottames/ghostty
+    install:
+      # Disable weak dependencies to reduce image size and build time
+      install-weak-deps: false
+      packages:
+        # Terminal and shell utilities
+        - starship
+        - alacritty
+        - zoxide
+        - ghostty
+
+        # File managers and utilities
+        - bat
+        - du-dust
+        - fd-find
+        - fzf
+        - ripgrep
+        - tar
+        - unzip
+        - wget
+
+        # Development tools
+        - cargo
+        - clang
+        - dbus-devel
+        - pkgconf-pkg-config
+        - openssl-devel
+        - libxcb-devel
+
+        # Text editors and IDEs
+        - neovim
+
+        # System utilities
+        - bind-utils
+        - brightnessctl
+        - btop
+        - fastfetch
+        - iputils
+        - pciutils
+        - plocate
+        - tldr
+        - usbutils
+        - whois
+        - wiremix
+
+        # Fonts
+        - cascadia-code-nf-fonts
+        - cascadia-mono-nf-fonts
+        - fira-code-fonts
+        - fontawesome-fonts-all
+        - google-noto-fonts-common
+
+        # Applications
+        - chromium
+        - evince
+        - gnome-calculator
+        - gum
+        - imv
+        - mpv
+        - nautilus
+
+        # Input methods
+        - fcitx5
+        - fcitx5-configtool
+        - fcitx5-gtk
+        - fcitx5-qt
+
+        # File system and networking
+        - gvfs-mtp
+        - gvfs-smb
+        - iwd
+        - pipx
+        - playerctl
+
+        # Hyprland ecosystem
+        - hyprcursor
+        - hypridle
+        - hyprland
+        - hyprland-qt-support
+        - hyprland-qtutils
+        - hyprlock
+        - hyprpaper
+        - hyprpicker
+        - hyprpolkitagent
+        - hyprshot
+        - hyprsunset
+        - hyprsysteminfo
+        - hyprutils
+        - hyprwayland-scanner
+
+        # Desktop components
+        - kvantum-qt5
+        - mako
+        - swaybg
+        - uwsm
+        - waybar
+        - wf-recorder
+        - wl-clipboard
+        - wofi
+        - xdg-desktop-portal-gtk
+        - xdg-desktop-portal-hyprland
+        - xdg-user-dirs
+
+        # Theming and icons
+        - gnome-themes-extra
+        - xmlstarlet
+        - yaru-icon-theme
+
+        # Additional tools
+        - mise
+        - satty
+        - slurp
+        - sushi
+        - curl
+        - rsync
+        - tmux
+        - npm
+        - meson
+        - scdoc
+        - pyprland
+        - python3-pillow
+        - python3-psutil
+        - foot
+        - jetbrains-mono-fonts
+        - qt5ct
+        - qt6ct
+        - nwg-look
+        - blueman
+        - wdisplays
+        - cliphist
+        - gammastep
+        - grimblast
+        - pamixer
+        - pavucontrol
+        - swappy
+        - swww
+        - upower
+        - yad
+        - sddm
+
+        # Boot and system
+        - plymouth
+        - plymouth-core-libs
+        - plymouth-scripts
+        - plymouth-system-theme
+    remove:
+      packages:
+        - firefox
+        - firefox-langpacks
+        - kitty
+        - NetworkManager*
+        - nwg-panel
+
+  - type: files
+    files:
+      - source: system
+        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
+
+  - type: files
+    files:
+      - source: scripts/omadora-build-time-setup.sh
+        destination: /usr/bin/omadora-build-time-setup.sh
+        mode: 0755
+
+  - type: script
+    snippets:
+      - chmod +x /usr/bin/omadora-build-time-setup.sh
+
+  - type: script
+    snippets:
+      - git clone https://github.com/elpritchos/omadora.git /etc/skel/.local/share/omadora
+      - /usr/bin/omadora-build-time-setup.sh /etc/skel/.local/share/omadora
+
+  - type: script
+    snippets:
+      - cargo install --root /usr bluetui cargo-update eza impala
+
+  - type: script
+    snippets:
+      - |
+        # Remove KDE desktop packages to reduce image size
+        # Use a simpler approach that doesn't rely on complex sed patterns
+        dnf5 remove -y kde-settings kde-settings-pulseaudio kde-settings-minimal || true
+        dnf5 remove -y plasma-workspace plasma-desktop plasma-systemsettings || true
+        dnf5 remove -y kwin kwin-wayland kwin-x11 || true
+        dnf5 remove -y kde-cli-tools kde-gtk-config || true
+        # Remove any remaining KDE packages with wildcard
+        dnf5 remove -y kde-settings* plasma* kwin* kde-cli* kde-gtk* || true
+        # Clean DNF cache to reduce image size
+        dnf5 clean all
+        rm -rf /var/cache/dnf/*
+  # Move omadora setup earlier to fail fast if there are issues
+
+
+
+  - type: systemd
+    system:
+      enabled:
+        - systemd-networkd.service
+        - iwd.service
+        - sddm.service
+      disabled:
+        - systemd-networkd-wait-online.service
+      masked:
+        - systemd-networkd-wait-online.service
+    user:
+      enabled:
+        - omadora-battery-monitor.service
+        - omadora-battery-monitor.timer
+
+  - type: files
+    files:
+      - source: scripts/omadora-waybar-update
+        destination: /usr/bin/omadora-waybar-update
+        mode: 0755
+
+
+  - type: script
+    snippets:
+      - echo 'exec-once = sleep 2 && $HOME/.local/share/omadora/install/config/detect-keyboard-layout.sh' >> /etc/skel/.config/hypr/autostart.conf
+
+  - type: files
+    files:
+      - source: scripts/omazzite-personal-setup
+        destination: /usr/bin/omazzite-personal-setup
+        mode: 0755
+  - type: script
+    snippets:
+      - chmod +x /usr/bin/omazzite-personal-setup
+
+  - type: script
+    # Configure Homebrew for multi-user access.
+    # 1. Create a 'brew' group.
+    # 2. Set ownership and permissions for the Homebrew directory.
+    # 3. Configure /etc/login.defs to automatically add new users to the 'brew' group.
+    snippets:
+      - groupadd -r brew
+      - if [ -d "/home/linuxbrew" ]; then chown -R :brew /home/linuxbrew && chmod -R g+w /home/linuxbrew && chmod g+s /home/linuxbrew; fi
+      - sed -i 's/USERGROUPS_ENAB yes/USERGROUPS_ENAB no/' /etc/login.defs && sed -i 's/#EXTRA_GROUPS/EXTRA_GROUPS/' /etc/login.defs && sed -i '/^EXTRA_GROUPS/ s/$/,brew/' /etc/login.defs
+
+  - type: signing # this sets up the proper policy & signing files for signed images to work fully
