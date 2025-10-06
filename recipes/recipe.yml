@@ -209,6 +209,7 @@ modules:
   - type: script
     snippets:
       - git clone https://github.com/elpritchos/omadora.git /etc/skel/.local/share/omadora
+      - rm -rf /etc/skel/.local/share/omadora/.git
       - /usr/bin/omadora-build-time-setup.sh /etc/skel/.local/share/omadora
 
   - type: script
