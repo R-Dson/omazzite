@@ -95,16 +95,21 @@ else
     echo "Warning: Local omadora source '$SKEL_LOCAL_OMADORA_SOURCE' not found in $SKEL_DIR."
 fi
 
-# Copy .local/share/fonts
-SKEL_LOCAL_FONTS_SOURCE="$SKEL_DIR/.local/share/fonts"
-SKEL_LOCAL_FONTS_DEST="$HOME_DIR/.local/share/fonts"
-if [ -d "$SKEL_LOCAL_FONTS_SOURCE" ]; then
-    echo "Copying $SKEL_LOCAL_FONTS_SOURCE to $SKEL_LOCAL_FONTS_DEST..."
-    mkdir -p "$SKEL_LOCAL_FONTS_DEST"
-    cp -rL "$SKEL_LOCAL_FONTS_SOURCE"/* "$SKEL_LOCAL_FONTS_DEST/"
-else
-    echo "Warning: Local fonts source '$SKEL_LOCAL_FONTS_SOURCE' not found in $SKEL_DIR."
-fi
+# Copy .local/share/fonts (commented out as directory is expected to be empty)
+# SKEL_LOCAL_FONTS_SOURCE="$SKEL_DIR/.local/share/fonts"
+# SKEL_LOCAL_FONTS_DEST="$HOME_DIR/.local/share/fonts"
+# if [ -d "$SKEL_LOCAL_FONTS_SOURCE" ]; then
+#     echo "Copying $SKEL_LOCAL_FONTS_SOURCE to $SKEL_LOCAL_FONTS_DEST..."
+#     mkdir -p "$SKEL_LOCAL_FONTS_DEST"
+#     # Only copy if there are files in the source directory
+#     if [ -n "$(ls -A "$SKEL_LOCAL_FONTS_SOURCE" 2>/dev/null)" ]; then
+#         cp -rL "$SKEL_LOCAL_FONTS_SOURCE"/* "$SKEL_LOCAL_FONTS_DEST/"
+#     else
+#         echo "Warning: Local fonts source directory '$SKEL_LOCAL_FONTS_SOURCE' is empty."
+#     fi
+# else
+#     echo "Warning: Local fonts source '$SKEL_LOCAL_FONTS_SOURCE' not found in $SKEL_DIR."
+# fi
 
 # 5. Merge configuration files from /etc/skel/.local/share/omadora/default/ into ~/.config/
 # This ensures that directories present in both /etc/skel/.config/ (from omadora/config/)
