@@ -2,7 +2,7 @@
 
 This is a custom atomic Fedora image, built upon the `bazzite-dx` and `bazzite-dx-nvidia` bases. It provides Hyprland desktop environment, based on the [Omarchy](https://omarchy.org) implementation and patterns, with the configuration of [omadora](https://github.com/elpritchos/omadora).
 
-
+You may need to create a new user or use `omazzite-reset-config` to have the default config files applied.
 
 ## Installation
 
@@ -27,8 +27,6 @@ To rebase an existing atomic Fedora installation to the latest build:
   ```
   systemctl reboot
   ```
-
-> You may need to create a new user to have the default config files applied.
 
 The `latest` tag will automatically point to the latest build. That build will still always use the Fedora version specified in `recipe.yml`, so you won't get accidentally updated to the next major version.
 
