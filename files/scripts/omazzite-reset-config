@@ -52,61 +52,77 @@ else
     echo "Warning: Omadora config source directory '$OMADORA_CONFIG_SOURCE' not found."
 fi
 
-# 4. Copy other specified configuration files/directories
-echo "Copying other specified configurations..."
+# 4. Copy other top-level configuration files/directories from /etc/skel
+echo "Copying other top-level configuration files/directories from $SKEL_DIR..."
 
 # Copy .bashrc
-BASHRC_SOURCE="$SKEL_DIR/.local/share/omadora/default/bashrc"
-if [ -f "$BASHRC_SOURCE" ]; then
-    echo "Copying $BASHRC_SOURCE to $HOME_DIR/.bashrc..."
-    cp -L "$BASHRC_SOURCE" "$HOME_DIR/.bashrc"
+SKEL_BASHRC_SOURCE="$SKEL_DIR/.bashrc"
+if [ -f "$SKEL_BASHRC_SOURCE" ]; then
+    echo "Copying $SKEL_BASHRC_SOURCE to $HOME_DIR/.bashrc..."
+    cp -L "$SKEL_BASHRC_SOURCE" "$HOME_DIR/.bashrc"
 else
-    echo "Warning: .bashrc source '$BASHRC_SOURCE' not found."
+    echo "Warning: .bashrc source '$SKEL_BASHRC_SOURCE' not found in $SKEL_DIR."
 fi
 
 # Copy .XCompose
-XCOMPOSE_SOURCE="$SKEL_DIR/.local/share/omadora/default/xcompose"
-if [ -f "$XCOMPOSE_SOURCE" ]; then
-    echo "Copying $XCOMPOSE_SOURCE to $HOME_DIR/.XCompose..."
-    cp -L "$XCOMPOSE_SOURCE" "$HOME_DIR/.XCompose"
+SKEL_XCOMPOSE_SOURCE="$SKEL_DIR/.XCompose"
+if [ -f "$SKEL_XCOMPOSE_SOURCE" ]; then
+    echo "Copying $SKEL_XCOMPOSE_SOURCE to $HOME_DIR/.XCompose..."
+    cp -L "$SKEL_XCOMPOSE_SOURCE" "$HOME_DIR/.XCompose"
 else
-    echo "Warning: .XCompose source '$XCOMPOSE_SOURCE' not found."
+    echo "Warning: .XCompose source '$SKEL_XCOMPOSE_SOURCE' not found in $SKEL_DIR."
 fi
 
 # Copy .local/share/applications/icons
-LOCAL_ICONS_SOURCE="$SKEL_DIR/.local/share/omadora/applications/icons"
-LOCAL_ICONS_DEST="$HOME_DIR/.local/share/applications/icons"
-if [ -d "$LOCAL_ICONS_SOURCE" ]; then
-    echo "Copying $LOCAL_ICONS_SOURCE to $LOCAL_ICONS_DEST..."
-    mkdir -p "$(dirname "$LOCAL_ICONS_DEST")"
-    cp -rL "$LOCAL_ICONS_SOURCE" "$LOCAL_ICONS_DEST"
+SKEL_LOCAL_ICONS_SOURCE="$SKEL_DIR/.local/share/applications/icons"
+SKEL_LOCAL_ICONS_DEST="$HOME_DIR/.local/share/applications/icons"
+if [ -d "$SKEL_LOCAL_ICONS_SOURCE" ]; then
+    echo "Copying $SKEL_LOCAL_ICONS_SOURCE to $SKEL_LOCAL_ICONS_DEST..."
+    mkdir -p "$(dirname "$SKEL_LOCAL_ICONS_DEST")"
+    cp -rL "$SKEL_LOCAL_ICONS_SOURCE" "$SKEL_LOCAL_ICONS_DEST"
 else
-    echo "Warning: Local icons source '$LOCAL_ICONS_SOURCE' not found."
+    echo "Warning: Local icons source '$SKEL_LOCAL_ICONS_SOURCE' not found in $SKEL_DIR."
 fi
 
 # Copy .local/share/omadora
-LOCAL_OMADORA_SOURCE="$SKEL_DIR/.local/share/omadora"
-LOCAL_OMADORA_DEST="$HOME_DIR/.local/share/omadora"
-if [ -d "$LOCAL_OMADORA_SOURCE" ]; then
-    echo "Copying $LOCAL_OMADORA_SOURCE to $LOCAL_OMADORA_DEST..."
-    mkdir -p "$(dirname "$LOCAL_OMADORA_DEST")"
-    cp -rL "$LOCAL_OMADORA_SOURCE" "$LOCAL_OMADORA_DEST"
+SKEL_LOCAL_OMADORA_SOURCE="$SKEL_DIR/.local/share/omadora"
+SKEL_LOCAL_OMADORA_DEST="$HOME_DIR/.local/share/omadora"
+if [ -d "$SKEL_LOCAL_OMADORA_SOURCE" ]; then
+    echo "Copying $SKEL_LOCAL_OMADORA_SOURCE to $SKEL_LOCAL_OMADORA_DEST..."
+    mkdir -p "$(dirname "$SKEL_LOCAL_OMADORA_DEST")"
+    cp -rL "$SKEL_LOCAL_OMADORA_SOURCE" "$SKEL_LOCAL_OMADORA_DEST"
 else
-    echo "Warning: Local omadora source '$LOCAL_OMADORA_SOURCE' not found."
+    echo "Warning: Local omadora source '$SKEL_LOCAL_OMADORA_SOURCE' not found in $SKEL_DIR."
 fi
 
-# Copy .local/share/fonts (from omadora/config/fonts)
-LOCAL_FONTS_SOURCE="$SKEL_DIR/.local/share/omadora/config/fonts"
-LOCAL_FONTS_DEST="$HOME_DIR/.local/share/fonts"
-if [ -d "$LOCAL_FONTS_SOURCE" ]; then
-    echo "Copying $LOCAL_FONTS_SOURCE to $LOCAL_FONTS_DEST..."
-    mkdir -p "$LOCAL_FONTS_DEST"
-    cp -rL "$LOCAL_FONTS_SOURCE"/* "$LOCAL_FONTS_DEST/"
+# Copy .local/share/fonts
+SKEL_LOCAL_FONTS_SOURCE="$SKEL_DIR/.local/share/fonts"
+SKEL_LOCAL_FONTS_DEST="$HOME_DIR/.local/share/fonts"
+if [ -d "$SKEL_LOCAL_FONTS_SOURCE" ]; then
+    echo "Copying $SKEL_LOCAL_FONTS_SOURCE to $SKEL_LOCAL_FONTS_DEST..."
+    mkdir -p "$SKEL_LOCAL_FONTS_DEST"
+    cp -rL "$SKEL_LOCAL_FONTS_SOURCE"/* "$SKEL_LOCAL_FONTS_DEST/"
 else
-    echo "Warning: Local fonts source '$LOCAL_FONTS_SOURCE' not found."
+    echo "Warning: Local fonts source '$SKEL_LOCAL_FONTS_SOURCE' not found in $SKEL_DIR."
 fi
 
-# 5. Merge back non-conflicting items from ~/.config.tmp
+# 5. Merge configuration files from /etc/skel/.local/share/omadora/default/ into ~/.config/
+# This ensures that directories present in both /etc/skel/.config/ (from omadora/config/)
+# and /etc/skel/.local/share/omadora/default/ contain files from both sources.
+echo "Merging default configuration files from $SKEL_DIR/.local/share/omadora/default/ into ~/.config/..."
+SKEL_DEFAULT_SOURCE="$SKEL_DIR/.local/share/omadora/default"
+if [ -d "$SKEL_DEFAULT_SOURCE" ]; then
+    # Use rsync to recursively copy the contents of each directory in default/ into the corresponding directory in ~/.config/
+    # -a: archive mode (preserves permissions, times, symbolic links, etc.)
+    # -v: verbose (shows what is being processed)
+    # -L: dereference symlinks (to match cp -L behavior)
+    # NOTE: Not using --ignore-existing here, as we want to merge contents of directories.
+    rsync -avL "$SKEL_DEFAULT_SOURCE/"* "$HOME_DIR/.config/"
+else
+    echo "Warning: Default config source directory '$SKEL_DEFAULT_SOURCE' not found in $SKEL_DIR."
+fi
+
+# 6. Merge back non-conflicting items from ~/.config.tmp
 if [ -d "$CONFIG_TMP_DIR" ]; then
     echo "Merging back non-conflicting items from $CONFIG_TMP_DIR..."
     # Use rsync to merge, which will skip files/dirs that already exist in the destination.
