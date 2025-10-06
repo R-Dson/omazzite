@@ -270,12 +270,12 @@ modules:
 
   - type: files
     files:
-      - source: scripts/omadora-reset-config
-        destination: /usr/bin/omadora-reset-config
+      - source: scripts/omazzite-reset-config
+        destination: /usr/bin/omazzite-reset-config
         mode: 0755
   - type: script
     snippets:
-      - chmod +x /usr/bin/omadora-reset-config
+      - chmod +x /usr/bin/omazzite-reset-config
 
   - type: script
     # Configure Homebrew for multi-user access.

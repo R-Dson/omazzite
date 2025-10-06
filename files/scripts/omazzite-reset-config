@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script allows a user to reset their Omadora configuration files
+# This script allows a user to reset their Omazzite personal configuration files
 # by copying them from the /etc/skel directory to their home directory.
 # It also creates a backup of existing configuration files before overwriting.
 
@@ -10,20 +10,20 @@ SKEL_DIR="/etc/skel"
 HOME_DIR="$HOME"
 BACKUP_DIR="$HOME/.config_backup_$(date +%Y%m%d%H%M%S)"
 
-echo "WARNING: This script will reset your Omadora configuration files to their default state."
+echo "WARNING: This script will reset your Omazzite configuration files to their default Omadora state."
 echo "         Existing configuration files will be backed up, but will be overwritten."
 echo "         Proceed with caution!"
 echo ""
 
-read -p "Do you want to continue with the Omadora configuration reset? (y/N): " confirm
-if [[ ! "$confirm" =~ ^[yY]$ ]]; then
+read -p "Do you want to continue with the Omazzite configuration reset? (Y/n): " confirm
+if [[ ! "$confirm" =~ ^[yY]$ ]] && [[ ! -z "$confirm" ]]; then
     echo "Configuration reset cancelled."
     exit 0
 fi
 
 if [ ! -d "$SKEL_DIR" ]; then
     echo "Error: Default configuration directory $SKEL_DIR not found."
-    echo "This script is intended for systems where Omadora defaults are installed."
+    echo "This script is intended for systems where Omazzite defaults are installed."
     exit 1
 fi
 
@@ -57,15 +57,15 @@ for item in "${CONFIG_ITEMS[@]}"; do
     DEST="$HOME_DIR/$item"
     
     if [ -e "$SOURCE" ] || [ -d "$SOURCE" ]; then
-        read -p "Reset '$item'? (y/N): " reset_confirm
-        if [[ "$reset_confirm" =~ ^[yY]$ ]]; then
+        read -p "Reset '$item'? (Y/n): " reset_confirm
+        if [[ "$reset_confirm" =~ ^[yY]$ ]] || [[ -z "$reset_confirm" ]]; then
             if [ -e "$DEST" ] || [ -d "$DEST" ]; then
                 echo "Backing up $DEST to $BACKUP_DIR/$(basename "$item")_backup"
-                cp -r "$DEST" "$BACKUP_DIR/$(basename "$item")_backup"
+                cp -Lr "$DEST" "$BACKUP_DIR/$(basename "$item")_backup"
             fi
             echo "Copying $SOURCE to "$DEST""
             mkdir -p "$(dirname "$DEST")" # Ensure parent directory exists
-            cp -r "$SOURCE" "$DEST"
+            cp -Lr "$SOURCE" "$DEST"
         else
             echo "Skipping reset for '$item'."
         fi
@@ -75,5 +75,6 @@ for item in "${CONFIG_ITEMS[@]}"; do
 done
 
 echo ""
-echo "Omadora configuration reset complete. A backup of your previous configuration is available at $BACKUP_DIR."
-echo "Please log out and log back in for changes to take full effect, especially for Hyprland configurations."
+echo "Omazzite configuration reset complete. A backup of your previous configuration is available at $BACKUP_DIR."
+echo "For changes to take full effect, it is highly recommended to perform a full system reboot, or at least restart your desktop environment (e.g., Hyprland) and any relevant applications."
+echo "For Hyprland, you might need to run 'hyprctl reload' or log out and log back in."
