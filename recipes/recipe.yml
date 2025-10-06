@@ -270,7 +270,7 @@ modules:
 
   - type: files
     files:
-      - source: scripts/omadora-reset-config.sh
+      - source: scripts/omadora-reset-config
         destination: /usr/bin/omadora-reset-config
         mode: 0755
   - type: script
