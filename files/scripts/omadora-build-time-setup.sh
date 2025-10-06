@@ -62,7 +62,36 @@ chmod +x "$OMADORA_REPO_PATH/bin/"*
 
 echo "Creating dummy/modified scripts in omadora repository..."
 echo -e '#!/bin/bash\nexit 0' > "$OMADORA_REPO_PATH/bin/omadora-migrate"
-sed -i '1,$d' "$OMADORA_REPO_PATH/bin/omadora-pkg-install" && echo -e '#!/bin/bash\nexit 0' > "$OMADORA_REPO_PATH/bin/omadora-pkg-install"
+cat << 'EOF' > "$OMADORA_REPO_PATH/bin/omadora-pkg-install"
+#!/bin/bash
+
+fzf_args=(
+  --multi
+  # Use 'flatpak info' for the preview
+  --preview 'flatpak info {1}'
+  --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select, F11: maximize'
+  --preview-label-pos='bottom'
+  --preview-window 'down:65%:wrap'
+  --bind 'alt-p:toggle-preview'
+  --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+  --bind 'alt-k:preview-up,alt-j:preview-down'
+  --color 'pointer:green,marker:green'
+)
+
+# Get a list of available Flatpak application IDs from all remotes
+# and pipe them into fzf.
+pkg_ids=$(flatpak remote-ls --app --columns=application 2>/dev/null | fzf "${fzf_args[@]}")
+
+if [[ -n "$pkg_ids" ]]; then
+  # Convert newline-separated list into an array
+  readarray -t pkgs <<< "$pkg_ids"
+  
+  # Install the selected packages using flatpak. 'sudo' is not required for a user install.
+  flatpak install "${pkgs[@]}"
+  
+  omadora-show-done
+fi
+EOF
 sed -i '1,$d' "$OMADORA_REPO_PATH/bin/omadora-update-system-pkgs" && echo -e '#!/bin/bash\nexit 0' > "$OMADORA_REPO_PATH/bin/omadora-update-system-pkgs"
 sed -i '1,$d' "$OMADORA_REPO_PATH/bin/omadora-pkg-remove" && echo -e '#!/bin/bash\nexit 0' > "$OMADORA_REPO_PATH/bin/omadora-pkg-remove"
 chmod +x "$OMADORA_REPO_PATH/bin/omadora-pkg-install"

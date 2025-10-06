@@ -268,6 +268,15 @@ modules:
     snippets:
       - chmod +x /usr/bin/omazzite-personal-setup
 
+  - type: files
+    files:
+      - source: scripts/omadora-reset-config.sh
+        destination: /usr/bin/omadora-reset-config
+        mode: 0755
+  - type: script
+    snippets:
+      - chmod +x /usr/bin/omadora-reset-config
+
   - type: script
     # Configure Homebrew for multi-user access.
     # 1. Create a 'brew' group.

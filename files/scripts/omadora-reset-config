@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# This script allows a user to reset their Omadora configuration files
+# by copying them from the /etc/skel directory to their home directory.
+# It also creates a backup of existing configuration files before overwriting.
+
+set -oue pipefail
+
+SKEL_DIR="/etc/skel"
+HOME_DIR="$HOME"
+BACKUP_DIR="$HOME/.config_backup_$(date +%Y%m%d%H%M%S)"
+
+echo "WARNING: This script will reset your Omadora configuration files to their default state."
+echo "         Existing configuration files will be backed up, but will be overwritten."
+echo "         Proceed with caution!"
+echo ""
+
+read -p "Do you want to continue with the Omadora configuration reset? (y/N): " confirm
+if [[ ! "$confirm" =~ ^[yY]$ ]]; then
+    echo "Configuration reset cancelled."
+    exit 0
+fi
+
+if [ ! -d "$SKEL_DIR" ]; then
+    echo "Error: Default configuration directory $SKEL_DIR not found."
+    echo "This script is intended for systems where Omadora defaults are installed."
+    exit 1
+fi
+
+echo "Creating backup of existing configuration files in $BACKUP_DIR..."
+mkdir -p "$BACKUP_DIR"
+
+# List of directories/files to backup and then copy from /etc/skel
+declare -a CONFIG_ITEMS=(
+    ".bashrc"
+    ".XCompose"
+    ".config/hypr"
+    ".config/omadora"
+    ".config/uwsm"
+    ".config/nvim"
+    ".config/btop"
+    ".config/mako"
+    ".local/share/applications/icons"
+    ".local/share/omadora"
+    ".local/share/fonts"
+)
+
+echo ""
+echo "The following configuration items will be reset:"
+for item in "${CONFIG_ITEMS[@]}"; do
+    echo "  - $item"
+done
+echo ""
+
+for item in "${CONFIG_ITEMS[@]}"; do
+    SOURCE="$SKEL_DIR/$item"
+    DEST="$HOME_DIR/$item"
+    
+    if [ -e "$SOURCE" ] || [ -d "$SOURCE" ]; then
+        read -p "Reset '$item'? (y/N): " reset_confirm
+        if [[ "$reset_confirm" =~ ^[yY]$ ]]; then
+            if [ -e "$DEST" ] || [ -d "$DEST" ]; then
+                echo "Backing up $DEST to $BACKUP_DIR/$(basename "$item")_backup"
+                cp -r "$DEST" "$BACKUP_DIR/$(basename "$item")_backup"
+            fi
+            echo "Copying $SOURCE to "$DEST""
+            mkdir -p "$(dirname "$DEST")" # Ensure parent directory exists
+            cp -r "$SOURCE" "$DEST"
+        else
+            echo "Skipping reset for '$item'."
+        fi
+    else
+        echo "Warning: Source item $SOURCE does not exist in $SKEL_DIR. Skipping."
+    fi
+done
+
+echo ""
+echo "Omadora configuration reset complete. A backup of your previous configuration is available at $BACKUP_DIR."
+echo "Please log out and log back in for changes to take full effect, especially for Hyprland configurations."
