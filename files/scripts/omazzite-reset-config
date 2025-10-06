@@ -30,30 +30,31 @@ fi
 echo "Creating backup of existing configuration files in $BACKUP_DIR..."
 mkdir -p "$BACKUP_DIR"
 
-# List of directories/files to backup and then copy from /etc/skel
-declare -a CONFIG_ITEMS=(
-    ".bashrc"
-    ".XCompose"
-    ".config/hypr"
-    ".config/omadora"
-    ".config/uwsm"
-    ".config/nvim"
-    ".config/btop"
-    ".config/mako"
-    ".local/share/applications/icons"
-    ".local/share/omadora"
-    ".local/share/fonts"
+# Define a mapping of destination paths to source paths within /etc/skel/.local/share/omadora
+# The key is the destination path relative to $HOME, the value is the source path relative to $SKEL_DIR.
+declare -A CONFIG_PATHS=(
+    [".bashrc"]="$SKEL_DIR/.local/share/omadora/default/bashrc"
+    [".XCompose"]="$SKEL_DIR/.local/share/omadora/default/xcompose"
+    [".config/hypr"]="$SKEL_DIR/.local/share/omadora/config/hypr"
+    [".config/omadora"]="$SKEL_DIR/.local/share/omadora/config/omadora"
+    [".config/uwsm"]="$SKEL_DIR/.local/share/omadora/config/uwsm"
+    [".config/nvim"]="$SKEL_DIR/.local/share/omadora/config/nvim"
+    [".config/btop"]="$SKEL_DIR/.local/share/omadora/config/btop"
+    [".config/mako"]="$SKEL_DIR/.local/share/omadora/config/mako"
+    [".local/share/applications/icons"]="$SKEL_DIR/.local/share/omadora/applications/icons"
+    [".local/share/omadora"]="$SKEL_DIR/.local/share/omadora"
+    [".local/share/fonts"]="$SKEL_DIR/.local/share/omadora/config/fonts"
 )
 
 echo ""
 echo "The following configuration items will be reset:"
-for item in "${CONFIG_ITEMS[@]}"; do
+for item in "${!CONFIG_PATHS[@]}"; do
     echo "  - $item"
 done
 echo ""
 
-for item in "${CONFIG_ITEMS[@]}"; do
-    SOURCE="$SKEL_DIR/$item"
+for item in "${!CONFIG_PATHS[@]}"; do
+    SOURCE="${CONFIG_PATHS[$item]}"
     DEST="$HOME_DIR/$item"
     
     if [ -e "$SOURCE" ] || [ -d "$SOURCE" ]; then
@@ -62,6 +63,7 @@ for item in "${CONFIG_ITEMS[@]}"; do
             if [ -e "$DEST" ] || [ -d "$DEST" ]; then
                 echo "Backing up $DEST to $BACKUP_DIR/$(basename "$item")_backup"
                 cp -Lr "$DEST" "$BACKUP_DIR/$(basename "$item")_backup"
+                rm -rf "$DEST"
             fi
             echo "Copying $SOURCE to "$DEST""
             mkdir -p "$(dirname "$DEST")" # Ensure parent directory exists
