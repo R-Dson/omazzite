@@ -120,6 +120,38 @@ if [ -d "$CONFIG_TMP_DIR" ]; then
     rm -rf "$CONFIG_TMP_DIR"
 fi
 
+echo "Setting up ~/.config/omadora structure..."
+
+# 1. Setup theme links (from omadora/install/config/theme.sh)
+mkdir -p "$HOME_DIR/.config/omadora/themes"
+# Note: Using /etc/skel/.local/share/omadora/themes as the source for themes
+for f in "$SKEL_DIR/.local/share/omadora/themes/"*; do
+    if [ -e "$f" ]; then
+        ln -snf "$f" "$HOME_DIR/.config/omadora/themes/"
+    fi
+done
+
+# 2. Set initial theme (from omadora/install/config/theme.sh)
+mkdir -p "$HOME_DIR/.config/omadora/current"
+ln -snf "$HOME_DIR/.config/omadora/themes/rose-pine-darker" "$HOME_DIR/.config/omadora/current/theme"
+ln -snf "$HOME_DIR/.config/omadora/current/theme/backgrounds/01_background.png" "$HOME_DIR/.config/omadora/current/background"
+
+# 3. Set specific app links for current theme (from omadora/install/config/theme.sh)
+# Note: ~/.config/nvim/lua/plugins/ might not exist yet, so we ensure it does.
+mkdir -p "$HOME_DIR/.config/nvim/lua/plugins"
+ln -snf "$HOME_DIR/.config/omadora/current/theme/neovim.lua" "$HOME_DIR/.config/nvim/lua/plugins/theme.lua"
+
+mkdir -p "$HOME_DIR/.config/btop/themes"
+ln -snf "$HOME_DIR/.config/omadora/current/theme/btop.theme" "$HOME_DIR/.config/btop/themes/current.theme"
+
+mkdir -p "$HOME_DIR/.config/mako"
+ln -snf "$HOME_DIR/.config/omadora/current/theme/mako.ini" "$HOME_DIR/.config/mako/config"
+
+# 4. Setup branding (from omadora/install/config/branding.sh)
+mkdir -p "$HOME_DIR/.config/omadora/branding"
+cp -L "$SKEL_DIR/.local/share/omadora/icon.txt" "$HOME_DIR/.config/omadora/branding/about.txt"
+cp -L "$SKEL_DIR/.local/share/omadora/logo.txt" "$HOME_DIR/.config/omadora/branding/screensaver.txt"
+
 # --- End of Bulk Copy Strategy Implementation ---
 
 echo ""
