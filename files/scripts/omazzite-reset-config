@@ -30,21 +30,43 @@ fi
 echo "Creating backup of existing configuration files in $BACKUP_DIR..."
 mkdir -p "$BACKUP_DIR"
 
-# Define a mapping of destination paths to source paths within /etc/skel/.local/share/omadora
-# The key is the destination path relative to $HOME, the value is the source path relative to $SKEL_DIR.
-declare -A CONFIG_PATHS=(
-    [".bashrc"]="$SKEL_DIR/.local/share/omadora/default/bashrc"
-    [".XCompose"]="$SKEL_DIR/.local/share/omadora/default/xcompose"
-    [".config/hypr"]="$SKEL_DIR/.local/share/omadora/config/hypr"
-    [".config/omadora"]="$SKEL_DIR/.local/share/omadora/config/omadora"
-    [".config/uwsm"]="$SKEL_DIR/.local/share/omadora/config/uwsm"
-    [".config/nvim"]="$SKEL_DIR/.local/share/omadora/config/nvim"
-    [".config/btop"]="$SKEL_DIR/.local/share/omadora/config/btop"
-    [".config/mako"]="$SKEL_DIR/.local/share/omadora/config/mako"
-    [".local/share/applications/icons"]="$SKEL_DIR/.local/share/omadora/applications/icons"
-    [".local/share/omadora"]="$SKEL_DIR/.local/share/omadora"
-    [".local/share/fonts"]="$SKEL_DIR/.local/share/omadora/config/fonts"
-)
+# Initialize CONFIG_PATHS associative array
+declare -A CONFIG_PATHS
+
+# Function to populate CONFIG_PATHS with static mappings
+populate_static_mappings() {
+    CONFIG_PATHS[".bashrc"]="$SKEL_DIR/.local/share/omadora/default/bashrc"
+    CONFIG_PATHS[".XCompose"]="$SKEL_DIR/.local/share/omadora/default/xcompose"
+    CONFIG_PATHS[".local/share/applications/icons"]="$SKEL_DIR/.local/share/omadora/applications/icons"
+    CONFIG_PATHS[".local/share/omadora"]="$SKEL_DIR/.local/share/omadora"
+    CONFIG_PATHS[".local/share/fonts"]="$SKEL_DIR/.local/share/omadora/config/fonts"
+}
+
+# Function to dynamically discover and add config directories from omadora/config
+discover_config_dirs() {
+    local omadora_config_dir="$SKEL_DIR/.local/share/omadora/config"
+    
+    if [ ! -d "$omadora_config_dir" ]; then
+        echo "Warning: Omadora config directory '$omadora_config_dir' not found. Skipping dynamic discovery."
+        return
+    fi
+    
+    # Find all directories within omadora/config and add them to CONFIG_PATHS
+    find "$omadora_config_dir" -mindepth 1 -maxdepth 1 -type d | while read -r dir; do
+        local dirname=$(basename "$dir")
+        local dest_path=".config/$dirname"
+        local source_path="$dir"
+        
+        # Skip if already statically mapped (though unlikely in this case)
+        if [[ -z "${CONFIG_PATHS[$dest_path]+isset}" ]]; then
+            CONFIG_PATHS["$dest_path"]="$source_path"
+        fi
+    done
+}
+
+# Populate the mappings
+populate_static_mappings
+discover_config_dirs
 
 echo ""
 echo "The following configuration items will be reset:"
