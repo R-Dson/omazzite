@@ -30,9 +30,23 @@ fi
 echo "Creating backup of existing configuration files in $BACKUP_DIR..."
 mkdir -p "$BACKUP_DIR"
 
-# 1. Move existing ~/.config to ~/.config.tmp
+# 1. Check for and handle existing ~/.config.tmp, then move existing ~/.config
 CONFIG_DIR="$HOME_DIR/.config"
 CONFIG_TMP_DIR="$HOME_DIR/.config.tmp"
+
+# Check if ~/.config.tmp already exists
+if [ -d "$CONFIG_TMP_DIR" ]; then
+    echo "Warning: $CONFIG_TMP_DIR already exists. This might be from a previous interrupted run."
+    read -p "Do you want to remove the existing $CONFIG_TMP_DIR? (Y/n): " confirm_tmp
+    if [[ ! "$confirm_tmp" =~ ^[yY]$ ]] && [[ ! -z "$confirm_tmp" ]]; then
+        echo "Configuration reset cancelled as $CONFIG_TMP_DIR was not removed."
+        exit 1
+    fi
+    echo "Removing existing $CONFIG_TMP_DIR..."
+    rm -rf "$CONFIG_TMP_DIR"
+fi
+
+# Move existing ~/.config to ~/.config.tmp
 
 if [ -d "$CONFIG_DIR" ]; then
     echo "Moving existing $CONFIG_DIR to $CONFIG_TMP_DIR..."
@@ -50,6 +64,28 @@ if [ -d "$OMADORA_CONFIG_SOURCE" ]; then
     cp -rL "$OMADORA_CONFIG_SOURCE"/* "$CONFIG_DIR/"
 else
     echo "Warning: Omadora config source directory '$OMADORA_CONFIG_SOURCE' not found."
+fi
+
+# Copy Hyprland configurations
+SKEL_HYPR_CONFIG_SOURCE="$SKEL_DIR/.config/hypr"
+HOME_HYPR_CONFIG_DEST="$HOME_DIR/.config/hypr"
+if [ -d "$SKEL_HYPR_CONFIG_SOURCE" ]; then
+    echo "Copying Hyprland configurations from $SKEL_HYPR_CONFIG_SOURCE to $HOME_HYPR_CONFIG_DEST..."
+    mkdir -p "$HOME_HYPR_CONFIG_DEST"
+    cp -rL "$SKEL_HYPR_CONFIG_SOURCE"/* "$HOME_HYPR_CONFIG_DEST/"
+else
+    echo "Warning: Hyprland config source '$SKEL_HYPR_CONFIG_SOURCE' not found in $SKEL_DIR."
+fi
+
+# Copy UWSM configurations
+SKEL_UWSM_CONFIG_SOURCE="$SKEL_DIR/.config/uwsm"
+HOME_UWSM_CONFIG_DEST="$HOME_DIR/.config/uwsm"
+if [ -d "$SKEL_UWSM_CONFIG_SOURCE" ]; then
+    echo "Copying UWSM configurations from $SKEL_UWSM_CONFIG_SOURCE to $HOME_UWSM_CONFIG_DEST..."
+    mkdir -p "$HOME_UWSM_CONFIG_DEST"
+    cp -rL "$SKEL_UWSM_CONFIG_SOURCE"/* "$HOME_UWSM_CONFIG_DEST/"
+else
+    echo "Warning: UWSM config source '$SKEL_UWSM_CONFIG_SOURCE' not found in $SKEL_DIR."
 fi
 
 # 4. Copy other top-level configuration files/directories from /etc/skel
@@ -93,6 +129,18 @@ if [ -d "$SKEL_LOCAL_OMADORA_SOURCE" ]; then
     cp -rL "$SKEL_LOCAL_OMADORA_SOURCE" "$SKEL_LOCAL_OMADORA_DEST"
 else
     echo "Warning: Local omadora source '$SKEL_LOCAL_OMADORA_SOURCE' not found in $SKEL_DIR."
+fi
+
+# Clone LazyVim starter into ~/.config/nvim for a fresh setup
+echo "Setting up default Neovim (LazyVim) configuration..."
+if [ -d "$HOME_DIR/.config/nvim" ]; then
+    echo "Removing existing ~/.config/nvim..."
+    rm -rf "$HOME_DIR/.config/nvim"
+fi
+git clone https://github.com/LazyVim/starter "$HOME_DIR/.config/nvim"
+if [ -d "$HOME_DIR/.config/nvim" ]; then
+    echo "Removing .git directory from cloned LazyVim starter..."
+    rm -rf "$HOME_DIR/.config/nvim/.git"
 fi
 
 # Copy .local/share/fonts (commented out as directory is expected to be empty)
