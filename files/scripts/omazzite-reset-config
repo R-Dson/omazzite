@@ -1,193 +1,80 @@
 #!/bin/bash
+set -euo pipefail
 
-# This script allows a user to reset their Omazzite personal configuration files
-# by copying them from the /etc/skel directory to their home directory.
-# It also creates a backup of existing configuration files before overwriting.
-
-set -oue pipefail
-
+# --- Configuration ---
 SKEL_DIR="/etc/skel"
-HOME_DIR="$HOME"
-BACKUP_DIR="$HOME/.config_backup_$(date +%Y%m%d%H%M%S)"
+CONFIG_TARGETS=(
+    ".bashrc"
+    ".XCompose"
+    ".config/omadora"
+    ".config/btop"
+    ".config/hypr"
+    ".config/mako"
+    ".config/nvim"
+    ".config/uwsm"
+    ".config/waybar"
+    ".local/share/applications/icons"
+    ".local/share/fonts"
+    ".local/share/omadora"
+)
 
-echo "WARNING: This script will reset your Omazzite configuration files to their default Omadora state."
-echo "         Existing configuration files will be backed up, but will be overwritten."
-echo "         Proceed with caution!"
-echo ""
+# --- Main Script ---
+echo "--- Omazzite Configuration Reset Tool ---"
+echo
+echo "This will reset your desktop environment's config to factory defaults."
+echo "Your current settings will be backed up."
+echo
+echo "The following will be reset:"
+for target in "${CONFIG_TARGETS[@]}"; do
+    echo "  - ~/$target"
+done
+echo "  - GTK/Icon Theme Settings"
+echo
+echo "Your other personal files and application settings will NOT be touched."
+echo
 
-read -p "Do you want to continue with the Omazzite configuration reset? (Y/n): " confirm
-if [[ ! "$confirm" =~ ^[yY]$ ]] && [[ ! -z "$confirm" ]]; then
-    echo "Configuration reset cancelled."
+read -p "Are you sure you want to continue? (y/N) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Reset cancelled."
     exit 0
 fi
 
-if [ ! -d "$SKEL_DIR" ]; then
-    echo "Error: Default configuration directory $SKEL_DIR not found."
-    echo "This script is intended for systems where Omazzite defaults are installed."
-    exit 1
-fi
-
-echo "Creating backup of existing configuration files in $BACKUP_DIR..."
+TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+BACKUP_DIR="$HOME/.config/omadora-backup-$TIMESTAMP"
 mkdir -p "$BACKUP_DIR"
+echo "Creating backup of current configuration in: $BACKUP_DIR"
 
-# Check for and handle existing ~/.config.tmp, then move existing ~/.config
-CONFIG_DIR="$HOME_DIR/.config"
-CONFIG_TMP_DIR="$HOME_DIR/.config.tmp"
-
-# Check if ~/.config.tmp already exists
-if [ -d "$CONFIG_TMP_DIR" ]; then
-    echo "Warning: $CONFIG_TMP_DIR already exists. This might be from a previous interrupted run."
-    read -p "Do you want to remove the existing $CONFIG_TMP_DIR? (Y/n): " confirm_tmp
-    if [[ ! "$confirm_tmp" =~ ^[yY]$ ]] && [[ ! -z "$confirm_tmp" ]]; then
-        echo "Configuration reset cancelled as $CONFIG_TMP_DIR was not removed."
-        exit 1
-    fi
-    echo "Removing existing $CONFIG_TMP_DIR..."
-    rm -rf "$CONFIG_TMP_DIR"
-fi
-
-# Move existing ~/.config to ~/.config.tmp
-if [ -d "$CONFIG_DIR" ]; then
-    echo "Moving existing $CONFIG_DIR to $CONFIG_TMP_DIR..."
-    mv "$CONFIG_DIR" "$CONFIG_TMP_DIR"
-fi
-
-echo "Creating new $CONFIG_DIR..."
-mkdir -p "$CONFIG_DIR"
-
-# Copy configurations from /etc/skel/.config/ (highest priority - contains omadora/config/* plus patches)
-SKEL_CONFIG_SOURCE="$SKEL_DIR/.config"
-if [ -d "$SKEL_CONFIG_SOURCE" ]; then
-    echo "Copying configurations from $SKEL_CONFIG_SOURCE to $CONFIG_DIR (with overwrite)..."
-    cp -rL "$SKEL_CONFIG_SOURCE"/* "$CONFIG_DIR/"
-else
-    echo "Warning: Skel config directory '$SKEL_CONFIG_SOURCE' not found in $SKEL_DIR."
-fi
-
-# This is for any additional config files that might not be in the skel .config directory
-OMADORA_CONFIG_SOURCE="$SKEL_DIR/.local/share/omadora/config"
-if [ -d "$OMADORA_CONFIG_SOURCE" ]; then
-    echo "Copying default configurations from $OMADORA_CONFIG_SOURCE to $CONFIG_DIR..."
-    # Use rsync with --ignore-existing to avoid overwriting files already copied from .config/
-    rsync -avL --ignore-existing "$OMADORA_CONFIG_SOURCE/"* "$CONFIG_DIR/"
-else
-    echo "Warning: Omadora config source directory '$OMADORA_CONFIG_SOURCE' not found."
-fi
-
-# Copy other top-level configuration files/directories from /etc/skel
-echo "Copying other top-level configuration files/directories from $SKEL_DIR..."
-
-# Copy .bashrc
-SKEL_BASHRC_SOURCE="$SKEL_DIR/.bashrc"
-if [ -f "$SKEL_BASHRC_SOURCE" ]; then
-    echo "Copying $SKEL_BASHRC_SOURCE to $HOME_DIR/.bashrc..."
-    cp -L "$SKEL_BASHRC_SOURCE" "$HOME_DIR/.bashrc"
-else
-    echo "Warning: .bashrc source '$SKEL_BASHRC_SOURCE' not found in $SKEL_DIR."
-fi
-
-# Copy .XCompose
-SKEL_XCOMPOSE_SOURCE="$SKEL_DIR/.XCompose"
-if [ -f "$SKEL_XCOMPOSE_SOURCE" ]; then
-    echo "Copying $SKEL_XCOMPOSE_SOURCE to $HOME_DIR/.XCompose..."
-    cp -L "$SKEL_XCOMPOSE_SOURCE" "$HOME_DIR/.XCompose"
-else
-    echo "Warning: .XCompose source '$SKEL_XCOMPOSE_SOURCE' not found in $SKEL_DIR."
-fi
-
-# Copy .local/share/applications/icons
-SKEL_LOCAL_ICONS_SOURCE="$SKEL_DIR/.local/share/applications/icons"
-SKEL_LOCAL_ICONS_DEST="$HOME_DIR/.local/share/applications/icons"
-if [ -d "$SKEL_LOCAL_ICONS_SOURCE" ]; then
-    echo "Copying $SKEL_LOCAL_ICONS_SOURCE to $SKEL_LOCAL_ICONS_DEST..."
-    mkdir -p "$(dirname "$SKEL_LOCAL_ICONS_DEST")"
-    cp -rL "$SKEL_LOCAL_ICONS_SOURCE" "$SKEL_LOCAL_ICONS_DEST"
-else
-    echo "Warning: Local icons source '$SKEL_LOCAL_ICONS_SOURCE' not found in $SKEL_DIR."
-fi
-
-# Copy .local/share/omadora
-SKEL_LOCAL_OMADORA_SOURCE="$SKEL_DIR/.local/share/omadora"
-SKEL_LOCAL_OMADORA_DEST="$HOME_DIR/.local/share/omadora"
-if [ -d "$SKEL_LOCAL_OMADORA_SOURCE" ]; then
-    echo "Copying $SKEL_LOCAL_OMADORA_SOURCE to $SKEL_LOCAL_OMADORA_DEST..."
-    mkdir -p "$(dirname "$SKEL_LOCAL_OMADORA_DEST")"
-    cp -rL "$SKEL_LOCAL_OMADORA_SOURCE" "$SKEL_LOCAL_OMADORA_DEST"
-    # Make binaries executable in the source before copying to .local/bin
-    chmod +x "$SKEL_LOCAL_OMADORA_SOURCE/bin/"* 2>/dev/null || echo "Warning: Could not set executable permissions on binaries in $SKEL_LOCAL_OMADORA_SOURCE/bin/"
-    # Copy binaries to .local/bin
-    mkdir -p "$HOME_DIR/.local/bin"
-    cp -L "$SKEL_LOCAL_OMADORA_SOURCE/bin/"* "$HOME_DIR/.local/bin/" 2>/dev/null || echo "Warning: Could not copy binaries from $SKEL_LOCAL_OMADORA_SOURCE/bin/ to $HOME_DIR/.local/bin/"
-else
-    echo "Warning: Local omadora source '$SKEL_LOCAL_OMADORA_SOURCE' not found in $SKEL_DIR."
-fi
-
-# Clone LazyVim starter into ~/.config/nvim for a fresh setup
-echo "Setting up default Neovim (LazyVim) configuration..."
-if [ -d "$HOME_DIR/.config/nvim" ]; then
-    echo "Removing existing ~/.config/nvim..."
-    rm -rf "$HOME_DIR/.config/nvim"
-fi
-git clone https://github.com/LazyVim/starter "$HOME_DIR/.config/nvim"
-if [ -d "$HOME_DIR/.config/nvim" ]; then
-    echo "Removing .git directory from cloned LazyVim starter..."
-    rm -rf "$HOME_DIR/.config/nvim/.git"
-fi
-
-# Merge configuration files from /etc/skel/.local/share/omadora/default/ into ~/.config/
-echo "Merging default configuration files from $SKEL_DIR/.local/share/omadora/default/ into ~/.config/..."
-SKEL_DEFAULT_SOURCE="$SKEL_DIR/.local/share/omadora/default"
-if [ -d "$SKEL_DEFAULT_SOURCE" ]; then
-    # Use rsync to recursively copy the contents of each directory in default/ into the corresponding directory in ~/.config/
-    rsync -avL --ignore-existing "$SKEL_DEFAULT_SOURCE/"* "$HOME_DIR/.config/"
-else
-    echo "Warning: Default config source directory '$SKEL_DEFAULT_SOURCE' not found in $SKEL_DIR."
-fi
-
-# Merge back non-conflicting items from ~/.config.tmp
-if [ -d "$CONFIG_TMP_DIR" ]; then
-    echo "Merging back non-conflicting items from $CONFIG_TMP_DIR..."
-    # Use rsync to merge, which will skip files/dirs that already exist in the destination.
-    rsync -av --ignore-existing "$CONFIG_TMP_DIR/" "$CONFIG_DIR/"
-    
-    # Optionally, remove the temporary directory after merging
-    echo "Removing temporary directory $CONFIG_TMP_DIR..."
-    rm -rf "$CONFIG_TMP_DIR"
-fi
-
-echo "Setting up ~/.config/omadora structure..."
-
-#  Setup theme links (from omadora/install/config/theme.sh)
-mkdir -p "$HOME_DIR/.config/omadora/themes"
-# Note: Using /etc/skel/.local/share/omadora/themes as the source for themes
-for f in "$SKEL_DIR/.local/share/omadora/themes/"*; do
-    if [ -e "$f" ]; then
-        ln -snf "$f" "$HOME_DIR/.config/omadora/themes/"
+for target in "${CONFIG_TARGETS[@]}"; do
+    source_path="$HOME/$target"
+    if [ -e "$source_path" ]; then
+        echo "Backing up ~/$target..."
+        mkdir -p "$(dirname "$BACKUP_DIR/$target")"
+        mv "$source_path" "$BACKUP_DIR/$target"
     fi
 done
 
-# Set initial theme (from omadora/install/config/theme.sh)
-mkdir -p "$HOME_DIR/.config/omadora/current"
-ln -snf "$HOME_DIR/.config/omadora/themes/rose-pine-darker" "$HOME_DIR/.config/omadora/current/theme"
-ln -snf "$HOME_DIR/.config/omadora/current/theme/backgrounds/01_background.png" "$HOME_DIR/.config/omadora/current/background"
+echo "Backup complete. Restoring default files and directories..."
+if ! cp -aT "$SKEL_DIR/" "$HOME/"; then
+    echo "Error: Failed to copy files from $SKEL_DIR."
+    echo "Your old configuration has been saved in $BACKUP_DIR."
+    exit 1
+fi
 
-# Set specific app links for current theme (from omadora/install/config/theme.sh)
-# Note: ~/.config/nvim/lua/plugins/ might not exist yet, so we ensure it does.
-mkdir -p "$HOME_DIR/.config/nvim/lua/plugins"
-ln -snf "$HOME_DIR/.config/omadora/current/theme/neovim.lua" "$HOME_DIR/.config/nvim/lua/plugins/theme.lua"
+echo "Restoring default GTK/GNOME theme settings..."
+# These commands target the user's dconf database to reset themes without
+# wiping settings for other applications.
+gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark"
+gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+gsettings set org.gnome.desktop.interface icon-theme "Yaru-blue"
 
-mkdir -p "$HOME_DIR/.config/btop/themes"
-ln -snf "$HOME_DIR/.config/omadora/current/theme/btop.theme" "$HOME_DIR/.config/btop/themes/current.theme"
+echo "Ensuring essential user services are enabled..."
+systemctl --user enable --now omadora-first-login.service > /dev/null 2>&1 || true
+systemctl --user enable --now omadora-battery-monitor.timer > /dev/null 2>&1 || true
 
-mkdir -p "$HOME_DIR/.config/mako"
-ln -snf "$HOME_DIR/.config/omadora/current/theme/mako.ini" "$HOME_DIR/.config/mako/config"
+echo
+echo "✅ Reset complete!"
+echo "Your previous configuration is backed up in: $BACKUP_DIR"
+echo "Please log out and log back in for all changes to take effect."
 
-# Setup branding (from omadora/install/config/branding.sh)
-mkdir -p "$HOME_DIR/.config/omadora/branding"
-cp -L "$SKEL_DIR/.local/share/omadora/icon.txt" "$HOME_DIR/.config/omadora/branding/about.txt"
-cp -L "$SKEL_DIR/.local/share/omadora/logo.txt" "$HOME_DIR/.config/omadora/branding/screensaver.txt"
-
-echo ""
-echo "Omazzite configuration reset complete. A backup of your previous configuration is available at $BACKUP_DIR."
-echo "For changes to take full effect, it is highly recommended to perform a full system reboot, or at least restart your desktop environment (e.g., Hyprland) and any relevant applications."
-echo "For Hyprland, you might need to run 'hyprctl reload' or log out and log back in."
+exit 0
