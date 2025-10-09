@@ -56,6 +56,7 @@ echo "Copying systemd user services to system-wide directory..."
 mkdir -p /usr/lib/systemd/user
 cp "$OMADORA_REPO_PATH/config/systemd/user/omadora-battery-monitor.service" /usr/lib/systemd/user/
 cp "$OMADORA_REPO_PATH/config/systemd/user/omadora-battery-monitor.timer" /usr/lib/systemd/user/
+cp "$OMADORA_REPO_PATH/config/systemd/user/omadora-first-login.service" /usr/lib/systemd/user/
 
 echo "Setting permissions for omadora binaries..."
 chmod +x "$OMADORA_REPO_PATH/bin/"*
@@ -68,7 +69,7 @@ cat << 'EOF' > "$OMADORA_REPO_PATH/bin/omadora-pkg-install"
 fzf_args=(
   --multi
   # Use 'flatpak info' for the preview
-  --preview 'flatpak info {1}'
+  --preview 'flatpak remote-info {1} {2}'
   --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select, F11: maximize'
   --preview-label-pos='bottom'
   --preview-window 'down:65%:wrap'
@@ -77,10 +78,10 @@ fzf_args=(
   --bind 'alt-k:preview-up,alt-j:preview-down'
   --color 'pointer:green,marker:green'
 )
-
 # Get a list of available Flatpak application IDs from all remotes
 # and pipe them into fzf.
-pkg_ids=$(flatpak remote-ls --app --columns=application 2>/dev/null | fzf "${fzf_args[@]}")
+pkg_ids=$(flatpak remote-ls --app --columns=origin,application 2>/dev/null | fzf "${fzf_args[@]}")
+
 
 if [[ -n "$pkg_ids" ]]; then
   # Convert newline-separated list into an array
@@ -103,10 +104,12 @@ echo -e '#!/bin/bash\ntuned-adm list | awk '\''/^ *- / {print}'\'' | sed -E '\''
 echo "Applying sed modifications to omadora scripts and configs..."
 sed -i 's/$(powerprofilesctl get)/$(tuned-adm active | awk '\''{print $NF}'\'')/g' "$OMADORA_REPO_PATH/bin/omadora-menu"
 sed -i 's/ --quiet//g' "$SKEL_DIR/.config/uwsm/env"
-
+sed -i '/exec-once = uwsm app -- waybar/d' "$SKEL_DIR/.config/hypr/autostart.conf"
 echo "Appending configurations to Hyprland config files in $SKEL_DIR..."
 echo 'bind = SUPER, F4, exec, pavucontrol' >> "$SKEL_DIR/.config/hypr/bindings/media.conf"
 echo 'exec-once = sleep 2 && pkill -x "waybar" && setsid uwsm app -- "waybar" >/dev/null 2>&1 &' >> "$SKEL_DIR/.config/hypr/autostart.conf"
+echo 'exec-once = systemctl --user enable --now omadora-first-login.service' >> "$SKEL_DIR/.config/hypr/autostart.conf"
+
 
 echo "Updating Waybar config in omadora repository..."
 # Create temporary file for jq output to avoid issues with in-place editing

@@ -248,6 +248,7 @@ modules:
       enabled:
         - omadora-battery-monitor.service
         - omadora-battery-monitor.timer
+        - omadora-first-login.service
 
   - type: files
     files:

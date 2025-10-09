@@ -30,7 +30,7 @@ fi
 echo "Creating backup of existing configuration files in $BACKUP_DIR..."
 mkdir -p "$BACKUP_DIR"
 
-# 1. Check for and handle existing ~/.config.tmp, then move existing ~/.config
+# Check for and handle existing ~/.config.tmp, then move existing ~/.config
 CONFIG_DIR="$HOME_DIR/.config"
 CONFIG_TMP_DIR="$HOME_DIR/.config.tmp"
 
@@ -129,45 +129,20 @@ if [ -d "$HOME_DIR/.config/nvim" ]; then
     rm -rf "$HOME_DIR/.config/nvim/.git"
 fi
 
-# Copy .local/share/fonts (commented out as directory is expected to be empty)
-# SKEL_LOCAL_FONTS_SOURCE="$SKEL_DIR/.local/share/fonts"
-# SKEL_LOCAL_FONTS_DEST="$HOME_DIR/.local/share/fonts"
-# if [ -d "$SKEL_LOCAL_FONTS_SOURCE" ]; then
-#     echo "Copying $SKEL_LOCAL_FONTS_SOURCE to $SKEL_LOCAL_FONTS_DEST..."
-#     mkdir -p "$SKEL_LOCAL_FONTS_DEST"
-#     # Only copy if there are files in the source directory
-#     if [ -n "$(ls -A "$SKEL_LOCAL_FONTS_SOURCE" 2>/dev/null)" ]; then
-#         cp -rL "$SKEL_LOCAL_FONTS_SOURCE"/* "$SKEL_LOCAL_FONTS_DEST/"
-#     else
-#         echo "Warning: Local fonts source directory '$SKEL_LOCAL_FONTS_SOURCE' is empty."
-#     fi
-# else
-#     echo "Warning: Local fonts source '$SKEL_LOCAL_FONTS_SOURCE' not found in $SKEL_DIR."
-# fi
-
-# 5. Merge configuration files from /etc/skel/.local/share/omadora/default/ into ~/.config/
-# This ensures that directories present in both /etc/skel/.config/ (from omadora/config/)
-# and /etc/skel/.local/share/omadora/default/ contain files from both sources.
+# Merge configuration files from /etc/skel/.local/share/omadora/default/ into ~/.config/
 echo "Merging default configuration files from $SKEL_DIR/.local/share/omadora/default/ into ~/.config/..."
 SKEL_DEFAULT_SOURCE="$SKEL_DIR/.local/share/omadora/default"
 if [ -d "$SKEL_DEFAULT_SOURCE" ]; then
     # Use rsync to recursively copy the contents of each directory in default/ into the corresponding directory in ~/.config/
-    # -a: archive mode (preserves permissions, times, symbolic links, etc.)
-    # -v: verbose (shows what is being processed)
-    # -L: dereference symlinks (to match cp -L behavior)
-    # NOTE: Not using --ignore-existing here, as we want to merge contents of directories.
-    rsync -avL "$SKEL_DEFAULT_SOURCE/"* "$HOME_DIR/.config/"
+    rsync -avL --ignore-existing "$SKEL_DEFAULT_SOURCE/"* "$HOME_DIR/.config/"
 else
     echo "Warning: Default config source directory '$SKEL_DEFAULT_SOURCE' not found in $SKEL_DIR."
 fi
 
-# 6. Merge back non-conflicting items from ~/.config.tmp
+# Merge back non-conflicting items from ~/.config.tmp
 if [ -d "$CONFIG_TMP_DIR" ]; then
     echo "Merging back non-conflicting items from $CONFIG_TMP_DIR..."
     # Use rsync to merge, which will skip files/dirs that already exist in the destination.
-    # -a: archive mode (preserves permissions, times, symbolic links, etc.)
-    # -v: verbose (shows what is being processed)
-    # --ignore-existing: skip files that already exist in the destination
     rsync -av --ignore-existing "$CONFIG_TMP_DIR/" "$CONFIG_DIR/"
     
     # Optionally, remove the temporary directory after merging
@@ -177,7 +152,7 @@ fi
 
 echo "Setting up ~/.config/omadora structure..."
 
-# 1. Setup theme links (from omadora/install/config/theme.sh)
+#  Setup theme links (from omadora/install/config/theme.sh)
 mkdir -p "$HOME_DIR/.config/omadora/themes"
 # Note: Using /etc/skel/.local/share/omadora/themes as the source for themes
 for f in "$SKEL_DIR/.local/share/omadora/themes/"*; do
@@ -186,12 +161,12 @@ for f in "$SKEL_DIR/.local/share/omadora/themes/"*; do
     fi
 done
 
-# 2. Set initial theme (from omadora/install/config/theme.sh)
+# Set initial theme (from omadora/install/config/theme.sh)
 mkdir -p "$HOME_DIR/.config/omadora/current"
 ln -snf "$HOME_DIR/.config/omadora/themes/rose-pine-darker" "$HOME_DIR/.config/omadora/current/theme"
 ln -snf "$HOME_DIR/.config/omadora/current/theme/backgrounds/01_background.png" "$HOME_DIR/.config/omadora/current/background"
 
-# 3. Set specific app links for current theme (from omadora/install/config/theme.sh)
+# Set specific app links for current theme (from omadora/install/config/theme.sh)
 # Note: ~/.config/nvim/lua/plugins/ might not exist yet, so we ensure it does.
 mkdir -p "$HOME_DIR/.config/nvim/lua/plugins"
 ln -snf "$HOME_DIR/.config/omadora/current/theme/neovim.lua" "$HOME_DIR/.config/nvim/lua/plugins/theme.lua"
@@ -202,12 +177,10 @@ ln -snf "$HOME_DIR/.config/omadora/current/theme/btop.theme" "$HOME_DIR/.config/
 mkdir -p "$HOME_DIR/.config/mako"
 ln -snf "$HOME_DIR/.config/omadora/current/theme/mako.ini" "$HOME_DIR/.config/mako/config"
 
-# 4. Setup branding (from omadora/install/config/branding.sh)
+# Setup branding (from omadora/install/config/branding.sh)
 mkdir -p "$HOME_DIR/.config/omadora/branding"
 cp -L "$SKEL_DIR/.local/share/omadora/icon.txt" "$HOME_DIR/.config/omadora/branding/about.txt"
 cp -L "$SKEL_DIR/.local/share/omadora/logo.txt" "$HOME_DIR/.config/omadora/branding/screensaver.txt"
-
-# --- End of Bulk Copy Strategy Implementation ---
 
 echo ""
 echo "Omazzite configuration reset complete. A backup of your previous configuration is available at $BACKUP_DIR."

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+"$HOME/.local/share/omadora/install/config/detect-keyboard-layout.sh"
