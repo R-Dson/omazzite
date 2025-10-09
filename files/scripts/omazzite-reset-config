@@ -113,6 +113,11 @@ if [ -d "$SKEL_LOCAL_OMADORA_SOURCE" ]; then
     echo "Copying $SKEL_LOCAL_OMADORA_SOURCE to $SKEL_LOCAL_OMADORA_DEST..."
     mkdir -p "$(dirname "$SKEL_LOCAL_OMADORA_DEST")"
     cp -rL "$SKEL_LOCAL_OMADORA_SOURCE" "$SKEL_LOCAL_OMADORA_DEST"
+    # Make binaries executable in the source before copying to .local/bin
+    chmod +x "$SKEL_LOCAL_OMADORA_SOURCE/bin/"* 2>/dev/null || echo "Warning: Could not set executable permissions on binaries in $SKEL_LOCAL_OMADORA_SOURCE/bin/"
+    # Copy binaries to .local/bin
+    mkdir -p "$HOME_DIR/.local/bin"
+    cp -L "$SKEL_LOCAL_OMADORA_SOURCE/bin/"* "$HOME_DIR/.local/bin/" 2>/dev/null || echo "Warning: Could not copy binaries from $SKEL_LOCAL_OMADORA_SOURCE/bin/ to $HOME_DIR/.local/bin/"
 else
     echo "Warning: Local omadora source '$SKEL_LOCAL_OMADORA_SOURCE' not found in $SKEL_DIR."
 fi
