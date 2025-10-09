@@ -47,48 +47,34 @@ if [ -d "$CONFIG_TMP_DIR" ]; then
 fi
 
 # Move existing ~/.config to ~/.config.tmp
-
 if [ -d "$CONFIG_DIR" ]; then
     echo "Moving existing $CONFIG_DIR to $CONFIG_TMP_DIR..."
     mv "$CONFIG_DIR" "$CONFIG_TMP_DIR"
 fi
 
-# 2. Create a new ~/.config directory
 echo "Creating new $CONFIG_DIR..."
 mkdir -p "$CONFIG_DIR"
 
-# 3. Copy default configurations from /etc/skel/.local/share/omadora/config/* to ~/.config/
+# Copy configurations from /etc/skel/.config/ (highest priority - contains omadora/config/* plus patches)
+SKEL_CONFIG_SOURCE="$SKEL_DIR/.config"
+if [ -d "$SKEL_CONFIG_SOURCE" ]; then
+    echo "Copying configurations from $SKEL_CONFIG_SOURCE to $CONFIG_DIR (with overwrite)..."
+    cp -rL "$SKEL_CONFIG_SOURCE"/* "$CONFIG_DIR/"
+else
+    echo "Warning: Skel config directory '$SKEL_CONFIG_SOURCE' not found in $SKEL_DIR."
+fi
+
+# This is for any additional config files that might not be in the skel .config directory
 OMADORA_CONFIG_SOURCE="$SKEL_DIR/.local/share/omadora/config"
 if [ -d "$OMADORA_CONFIG_SOURCE" ]; then
     echo "Copying default configurations from $OMADORA_CONFIG_SOURCE to $CONFIG_DIR..."
-    cp -rL "$OMADORA_CONFIG_SOURCE"/* "$CONFIG_DIR/"
+    # Use rsync with --ignore-existing to avoid overwriting files already copied from .config/
+    rsync -avL --ignore-existing "$OMADORA_CONFIG_SOURCE/"* "$CONFIG_DIR/"
 else
     echo "Warning: Omadora config source directory '$OMADORA_CONFIG_SOURCE' not found."
 fi
 
-# Copy Hyprland configurations
-SKEL_HYPR_CONFIG_SOURCE="$SKEL_DIR/.config/hypr"
-HOME_HYPR_CONFIG_DEST="$HOME_DIR/.config/hypr"
-if [ -d "$SKEL_HYPR_CONFIG_SOURCE" ]; then
-    echo "Copying Hyprland configurations from $SKEL_HYPR_CONFIG_SOURCE to $HOME_HYPR_CONFIG_DEST..."
-    mkdir -p "$HOME_HYPR_CONFIG_DEST"
-    cp -rL "$SKEL_HYPR_CONFIG_SOURCE"/* "$HOME_HYPR_CONFIG_DEST/"
-else
-    echo "Warning: Hyprland config source '$SKEL_HYPR_CONFIG_SOURCE' not found in $SKEL_DIR."
-fi
-
-# Copy UWSM configurations
-SKEL_UWSM_CONFIG_SOURCE="$SKEL_DIR/.config/uwsm"
-HOME_UWSM_CONFIG_DEST="$HOME_DIR/.config/uwsm"
-if [ -d "$SKEL_UWSM_CONFIG_SOURCE" ]; then
-    echo "Copying UWSM configurations from $SKEL_UWSM_CONFIG_SOURCE to $HOME_UWSM_CONFIG_DEST..."
-    mkdir -p "$HOME_UWSM_CONFIG_DEST"
-    cp -rL "$SKEL_UWSM_CONFIG_SOURCE"/* "$HOME_UWSM_CONFIG_DEST/"
-else
-    echo "Warning: UWSM config source '$SKEL_UWSM_CONFIG_SOURCE' not found in $SKEL_DIR."
-fi
-
-# 4. Copy other top-level configuration files/directories from /etc/skel
+# Copy other top-level configuration files/directories from /etc/skel
 echo "Copying other top-level configuration files/directories from $SKEL_DIR..."
 
 # Copy .bashrc
