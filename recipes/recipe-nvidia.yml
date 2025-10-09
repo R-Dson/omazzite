@@ -191,10 +191,7 @@ modules:
         - NetworkManager*
         - nwg-panel
 
-  - type: files
-    files:
-      - source: system
-        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
+# Removed duplicate copy of files/system
 
   - type: files
     files:
