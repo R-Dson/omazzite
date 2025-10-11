@@ -103,4 +103,14 @@ uv tool update-shell
 echo "Installing OpenCode"
 curl -fsSL https://opencode.ai/install | bash
 
+echo "Setting up hyprsunset"
+systemctl --user enable --now hyprsunset.service
+cat << EOF >> $HOME/.config/hypr/hyprsunset.conf
+
+profile {
+    time = 21:00
+    temperature = 4000
+}
+EOF
+
 echo "Setup complete. Please restart your terminal."
