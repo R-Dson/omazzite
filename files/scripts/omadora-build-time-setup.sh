@@ -78,17 +78,13 @@ fzf_args=(
   --color 'pointer:green,marker:green'
 )
 # Get a list of available Flatpak application IDs from all remotes
-# and pipe them into fzf.
-pkg_ids=$(flatpak remote-ls --app --columns=origin,application 2>/dev/null | fzf "${fzf_args[@]}")
-
+pkg_ids=$(flatpak remote-ls --app --columns=origin,application 2>/dev/null | fzf "${fzf_args[@]}" | awk '{print $2}')
 
 if [[ -n "$pkg_ids" ]]; then
   # Convert newline-separated list into an array
   readarray -t pkgs <<< "$pkg_ids"
   
-  # Install the selected packages using flatpak. 'sudo' is not required for a user install.
   flatpak install "${pkgs[@]}"
-  
   omadora-show-done
 fi
 EOF
