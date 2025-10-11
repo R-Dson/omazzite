@@ -177,6 +177,9 @@ modules:
         - upower
         - yad
         - sddm
+        - qt6-qtsvg
+        - qt6-qtvirtualkeyboard
+        - qt6-qtmultimedia
 
         # Boot and system
         - plymouth
@@ -191,8 +194,6 @@ modules:
         - NetworkManager*
         - nwg-panel
 
-# Removed duplicate copy of files/system
-
   - type: files
     files:
       - source: scripts/omadora-build-time-setup.sh
@@ -206,7 +207,10 @@ modules:
   - type: script
     snippets:
       - git clone https://github.com/elpritchos/omadora.git /etc/skel/.local/share/omadora
+      - mkdir -p /usr/share/sddm/themes
+      - git clone https://github.com/uiriansan/SilentSDDM.git /usr/share/sddm/themes/silent
       - rm -rf /etc/skel/.local/share/omadora/.git
+      - rm -rf /usr/share/sddm/themes/silent/.git
       - /usr/bin/omadora-build-time-setup.sh /etc/skel/.local/share/omadora
 
   - type: script
