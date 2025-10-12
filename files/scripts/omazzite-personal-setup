@@ -72,6 +72,7 @@ font-family = "Cascadia Mono NF"
 window-title-font-family="Cascadia Mono NF"
 window-height=30
 window-width=110
+command=/usr/bin/fish
 EOL
 
 # config
