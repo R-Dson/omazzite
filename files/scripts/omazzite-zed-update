@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+# Based on https://zed.dev/install.sh
+# A minimal script to download and update the stable version of Zed for Linux.
+# It installs the application into ~/.local/ and creates a symbolic link
+# for the executable in $HOME/.local/bin.
+#
+
+set -eu
+
+# Hardcoded URL for the latest Linux release.
+download_url="https://zed.dev/api/releases/stable/latest/zed-linux-x86_64.tar.gz"
+
+# The directory where Zed will be installed, and the name of the symlink.
+install_dir="$HOME/.local"
+app_dir="$install_dir/zed.app"
+bin_dir="$install_dir/bin"
+binary_symlink="$bin_dir/zed"
+
+# Create a temporary directory for the download.
+# The 'trap' command ensures this directory is cleaned up when the script exits.
+temp_dir=$(mktemp -d "/tmp/zed-update-XXXXXX")
+trap 'rm -rf -- "$temp_dir"' EXIT
+
+echo "Downloading the latest stable version of Zed..."
+
+# Use curl to download the tarball into our temporary directory.
+if ! curl -fL "$download_url" -o "$temp_dir/zed.tar.gz"; then
+    echo "Error: Failed to download Zed." >&2
+    exit 1
+fi
+
+echo "Installing/Updating Zed..."
+
+# Remove the old Zed application directory to ensure a clean update.
+rm -rf "$app_dir"
+
+# Extract the tarball into the ~/.local/ directory.
+# This will create a directory named 'zed-stable'.
+tar -xzf "$temp_dir/zed.tar.gz" -C "$install_dir/"
+
+# Ensure the user's local bin directory exists.
+mkdir -p "$bin_dir"
+
+# Create a symbolic link from the installed binary to ~/.local/bin/zed.
+# The -f flag ensures that if a symlink already exists, it is overwritten.
+ln -sf "$app_dir/bin/zed" "$binary_symlink"
+
+echo "Zed has been successfully installed/updated."
+echo "Make sure '$bin_dir' is in your PATH to run it by typing 'zed'."
