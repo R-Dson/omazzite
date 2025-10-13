@@ -280,6 +280,15 @@ modules:
     snippets:
       - chmod +x /usr/bin/omazzite-reset-config
 
+  - type: files
+    files:
+      - source: scripts/omazzite-zed-update
+        destination: /usr/bin/omazzite-zed-update
+        mode: 0755
+  - type: script
+    snippets:
+      - chmod +x /usr/bin/omazzite-zed-update
+
   - type: script
     # Configure Homebrew for multi-user access.
     # 1. Create a 'brew' group.
