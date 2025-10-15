@@ -29,13 +29,12 @@ if ! curl -fL "$download_url" -o "$temp_dir/zed.tar.gz"; then
     exit 1
 fi
 
-echo "Installing/Updating Zed..."
-
 # Remove the old Zed application directory to ensure a clean update.
 rm -rf "$app_dir"
 
+echo "Installing/Updating Zed..."
+
 # Extract the tarball into the ~/.local/ directory.
-# This will create a directory named 'zed-stable'.
 tar -xzf "$temp_dir/zed.tar.gz" -C "$install_dir/"
 
 # Ensure the user's local bin directory exists.
@@ -44,6 +43,18 @@ mkdir -p "$bin_dir"
 # Create a symbolic link from the installed binary to ~/.local/bin/zed.
 # The -f flag ensures that if a symlink already exists, it is overwritten.
 ln -sf "$app_dir/bin/zed" "$binary_symlink"
+
+echo "Integrating with desktop..."
+app_launcher_dir="$HOME/.local/share/applications"
+desktop_file_path="$app_launcher_dir/dev.zed.Zed.desktop"
+
+# Ensure the application launcher directory exists.
+mkdir -p "$app_launcher_dir"
+cp "$app_dir/share/applications/zed.desktop" "$desktop_file_path"
+
+# Update the .desktop file to use absolute paths for the Icon and Exec fields.
+sed -i "s|Icon=zed|Icon=$app_dir/share/icons/hicolor/512x512/apps/zed.png|g" "$desktop_file_path"
+sed -i "s|Exec=zed|Exec=$app_dir/bin/zed|g" "$desktop_file_path"
 
 echo "Zed has been successfully installed/updated."
 echo "Make sure '$bin_dir' is in your PATH to run it by typing 'zed'."
