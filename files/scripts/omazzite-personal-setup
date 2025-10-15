@@ -1,44 +1,108 @@
 #!/usr/bin/env bash
 
-set -oue pipefail
+set -euo pipefail
 
-#warning overwrite config files
-echo "This will overwrite your nvim and ghostty config files. Press enter to continue or ctrl-c to abort."
-read  # wait for user to press
+TEMP_DIR_TO_CLEAN=""
 
-# nvim
-echo "Setting nvim config"
-git clone https://github.com/adibhanna/nvim.git "$HOME/.config/nvim.tmp"
-if [ -d "$HOME/.config/nvim" ]; then
-    mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak"
-fi
-mv "$HOME/.config/nvim.tmp" "$HOME/.config/nvim"
+cleanup() {
+    if [[ -n "${TEMP_DIR_TO_CLEAN}" && -d "${TEMP_DIR_TO_CLEAN}" ]]; then
+        echo -e "\033[34m[INFO]\033[0m Cleaning up temporary directory: ${TEMP_DIR_TO_CLEAN}"
+        rm -rf -- "${TEMP_DIR_TO_CLEAN}"
+    fi
+}
 
-echo "Downloading jdtls.lua config"
-mkdir -p "$HOME/.config/nvim/lsp"
-curl -sSL https://raw.githubusercontent.com/neovim/nvim-lspconfig/refs/heads/master/lsp/jdtls.lua -o "$HOME/.config/nvim/lsp/jdtls.lua"
-echo "Downloading pyright.lua config"
-curl -sSL https://raw.githubusercontent.com/neovim/nvim-lspconfig/refs/heads/master/lsp/pyright.lua -o "$HOME/.config/nvim/lsp/pyright.lua"
+trap cleanup EXIT INT TERM
 
-# Add jdtls and pyright to lsp.lua
-echo "Updating LSP configuration"
-LSP_FILE="$HOME/.config/nvim/lua/core/lsp.lua"
-if [ -f "$LSP_FILE" ]; then
-    # Clear existing entries within the vim.lsp.enable block, then insert the new ones.
-    # This ensures only the specified LSPs are enabled.
-    sed -i '/vim\.lsp\.enable({/,/})/{/vim\.lsp\.enable({/!{/}/!d}}' "$LSP_FILE"
-    sed -i '/vim\.lsp\.enable({/a \    "jdtls",\n    "pyright",' "$LSP_FILE"
-    echo "Successfully added jdtls and pyright to $LSP_FILE"
-else
-    echo "Warning: $LSP_FILE not found, skipping LSP configuration update"
-fi
+info() {
+    echo -e "\033[34m[INFO]\033[0m $1"
+}
 
+success() {
+    echo -e "\033[32m[SUCCESS]\033[0m $1"
+}
 
-# ghostty config
-echo "Setting ghostty config"
-mkdir -p "$HOME/.config/ghostty"
+warn() {
+    echo -e "\033[33m[WARN]\033[0m $1"
+}
 
-cat > "$HOME/.config/ghostty/config" <<EOL
+error() {
+    echo -e "\033[31m[ERROR]\033[0m $1" >&2
+    exit 1
+}
+
+check_dependencies() {
+    info "Checking for required commands..."
+    local missing_deps=0
+    for cmd in git curl sed pip uv systemctl; do
+        if ! command -v "$cmd" &>/dev/null; then
+            echo -e "\033[31m[ERROR]\033[0m Command not found: $cmd"
+            missing_deps=1
+        fi
+    done
+
+    if [[ "$missing_deps" -eq 1 ]]; then
+        error "Please install the missing dependencies and try again."
+    fi
+    success "All dependencies are present."
+}
+
+setup_neovim() {
+    info "Setting up Neovim configuration..."
+    local nvim_config_dir="$HOME/.config/nvim"
+    local nvim_repo="https://github.com/adibhanna/nvim.git"
+
+    # Use mktemp and assign its output to our global variable.
+    TEMP_DIR_TO_CLEAN=$(mktemp -d)
+
+    info "Cloning Neovim config into temporary directory: ${TEMP_DIR_TO_CLEAN}"
+    git clone --depth 1 "$nvim_repo" "$TEMP_DIR_TO_CLEAN"
+
+    # If an existing nvim config exists, back it up with a timestamp.
+    if [ -d "$nvim_config_dir" ]; then
+        local backup_dir="${nvim_config_dir}.bak.$(date +%Y%m%d-%H%M%S)"
+        info "Backing up existing Neovim config to $backup_dir"
+        mv "$nvim_config_dir" "$backup_dir"
+    fi
+
+    # Move the new config into place.
+    mv "$TEMP_DIR_TO_CLEAN" "$nvim_config_dir"
+    success "Neovim configuration has been set up."
+
+    # *** CRITICAL STEP ***
+    # The temporary directory has been successfully moved. Clear the global variable
+    # so the cleanup trap knows not to delete the final destination directory.
+    TEMP_DIR_TO_CLEAN=""
+
+    info "Configuring LSP servers..."
+    local nvim_lsp_dir="$HOME/.config/nvim/lsp"
+    local lsp_config_file="$HOME/.config/nvim/lua/core/lsp.lua"
+
+    mkdir -p "$nvim_lsp_dir"
+
+    info "Downloading jdtls.lua config..."
+    curl -sSL "https://raw.githubusercontent.com/neovim/nvim-lspconfig/master/lua/lspconfig/server_configurations/jdtls.lua" -o "$nvim_lsp_dir/jdtls.lua"
+
+    info "Downloading pyright.lua config..."
+    curl -sSL "https://raw.githubusercontent.com/neovim/nvim-lspconfig/master/lua/lspconfig/server_configurations/pyright.lua" -o "$nvim_lsp_dir/pyright.lua"
+
+    if [ -f "$lsp_config_file" ]; then
+        info "Updating LSP configuration file: $lsp_config_file"
+        sed -i '/vim\.lsp\.enable({/,/})/{/vim\.lsp\.enable({/!{/}/!d}}' "$lsp_config_file"
+        sed -i '/vim\.lsp\.enable({/a \ \ \ \ "jdtls",\n\ \ \ \ "pyright",' "$lsp_config_file"
+        success "Added jdtls and pyright to LSP configuration."
+    else
+        warn "$lsp_config_file not found. Skipping LSP configuration update."
+    fi
+}
+
+setup_ghostty() {
+    info "Setting up Ghostty terminal configuration..."
+    local ghostty_config_dir="$HOME/.config/ghostty"
+    local ghostty_config_file="$ghostty_config_dir/config"
+
+    mkdir -p "$ghostty_config_dir"
+
+    cat > "$ghostty_config_file" <<EOL
 theme = iTerm2 Tango Dark
 bold-is-bright = true
 background = #080808
@@ -66,7 +130,7 @@ palette = 12=#49baff
 palette = 13=#fc4cb4
 palette = 14=#8be9fe
 palette = 15=#ededec
-font-size = 11 
+font-size = 11
 font-thicken = true
 font-family = "Cascadia Mono NF"
 window-title-font-family="Cascadia Mono NF"
@@ -74,44 +138,85 @@ window-height=30
 window-width=110
 command=/usr/bin/fish
 EOL
+    success "Ghostty configuration written to $ghostty_config_file"
+}
 
-# config
-echo "Setting monitor config"
-MONITOR_CONF=$HOME/.config/hypr/monitors.conf
-sed -i 's/env = GDK_SCALE,2/env = GDK_SCALE,1/g' "$MONITOR_CONF"
-sed -i 's/monitor=,preferred,auto,auto/monitor=,preferred,auto,1/g' "$MONITOR_CONF"
+configure_system_settings() {
+    info "Applying system-specific configurations..."
 
-# Set default terminal
-echo "Setting default terminal"
-UWSM_CONF=$HOME/.config/uwsm/default
-if [ -f "$UWSM_CONF" ]; then
-    sed -i 's/alacritty/ghostty/g' "$UWSM_CONF"
-    echo "Successfully set default terminal to ghostty"
-else
-    echo "Warning: $UWSM_CONF not found, skipping default terminal configuration"
-fi
+    local monitor_conf="$HOME/.config/hypr/monitors.conf"
+    if [ -f "$monitor_conf" ]; then
+        info "Updating monitor configuration: $monitor_conf"
+        sed -i 's/env = GDK_SCALE,2/env = GDK_SCALE,1/g' "$monitor_conf"
+        sed -i 's/monitor=,preferred,auto,auto/monitor=,preferred,auto,1/g' "$monitor_conf"
+        success "Monitor configuration updated."
+    else
+        warn "Monitor config file not found: $monitor_conf. Skipping."
+    fi
 
-# pip packages
-echo "Installing pip packages"
-pip install uv
+    local uwsm_conf="$HOME/.config/uwsm/default"
+    if [ -f "$uwsm_conf" ]; then
+        info "Setting default terminal to ghostty..."
+        sed -i 's/alacritty/ghostty/g' "$uwsm_conf"
+        success "Default terminal set in $uwsm_conf"
+    else
+        warn "UWSM config not found: $uwsm_conf. Skipping."
+    fi
 
+    info "Setting up hyprsunset..."
+    local hypr_config_dir="$HOME/.config/hypr"
+    local hyprsunset_conf="$hypr_config_dir/hyprsunset.conf"
 
-# Aider
-echo "Installing Aider"
-uv tool install --force --python python3.12 aider-chat
-uv tool update-shell
+    mkdir -p "$hypr_config_dir"
 
-echo "Installing OpenCode"
-curl -fsSL https://opencode.ai/install | bash
-
-echo "Setting up hyprsunset"
-systemctl --user enable --now hyprsunset.service
-cat << EOF >> $HOME/.config/hypr/hyprsunset.conf
+    # Redirect stderr to /dev/null to prevent "No such file" error if the file doesn't exist yet.
+    if ! grep -q "time = 21:00" "$hyprsunset_conf" 2>/dev/null; then
+        cat << EOF >> "$hyprsunset_conf"
 
 profile {
     time = 21:00
     temperature = 4000
 }
 EOF
+        success "Appended night profile to hyprsunset.conf"
+    else
+        info "Hyprsunset night profile already exists. Skipping."
+    fi
+    systemctl --user enable --now hyprsunset.service
+    success "Enabled hyprsunset user service."
+}
 
-echo "Setup complete. Please restart your terminal."
+install_tools() {
+    info "Installing command-line tools..."
+
+    info "Installing/updating uv..."
+    pip install --user --upgrade uv
+
+    info "Installing Aider..."
+    uv tool install --force --python python3.12 aider-chat
+    uv tool update-shell
+
+    info "Installing OpenCode..."
+    curl -fsSL https://opencode.ai/install | bash
+
+    info "Installing Zed Editor..."
+    /usr/bin/omazzite-zed-update
+
+    success "Tools installation process complete."
+}
+
+main() {
+    check_dependencies
+
+    warn "This script will overwrite your config files."
+    read -p "Press Enter to continue or Ctrl-C to abort."
+
+    setup_neovim
+    setup_ghostty
+    configure_system_settings
+    install_tools
+
+    success "Setup complete. Please restart your terminal or source your shell profile for all changes to take effect."
+}
+
+main
