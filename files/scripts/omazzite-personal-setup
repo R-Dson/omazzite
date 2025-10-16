@@ -184,6 +184,30 @@ EOF
     fi
     systemctl --user enable --now hyprsunset.service
     success "Enabled hyprsunset user service."
+
+    info "Updating Hyprland look and feel configuration..."
+    local looknfeel_conf="$HOME/.config/hypr/looknfeel.conf"
+    if [ -f "$looknfeel_conf" ]; then
+        # Use grep with -F (fixed string) and -q (quiet) to check if the rule already exists
+        if ! grep -Fq "workspace = w[tv1], gapsout:0, gapsin:0" "$looknfeel_conf"; then
+            info "Appending special workspace rules to $looknfeel_conf"
+            cat << EOF >> "$looknfeel_conf"
+
+workspace = w[tv1], gapsout:0, gapsin:0
+workspace = f[1], gapsout:0, gapsin:0
+windowrule = bordersize 0, floating:0, onworkspace:w[tv1]
+windowrule = rounding 0, floating:0, onworkspace:w[tv1]
+windowrule = bordersize 0, floating:0, onworkspace:f[1]
+windowrule = rounding 0, floating:0, onworkspace:f[1]
+EOF
+            success "Workspace rules for w[tv1] and f[1] added."
+        else
+            info "Special workspace rules already exist in $looknfeel_conf. Skipping."
+        fi
+    else
+        warn "Hyprland look and feel config not found: $looknfeel_conf. Skipping."
+    fi
+
 }
 
 install_tools() {
